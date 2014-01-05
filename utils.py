@@ -2,6 +2,8 @@ import zipfile
 import os.path
 import io
 
+# TODO operate on unicode here rather than raw bytes, as it's possible you operate on unaligned data
+
 
 def ensure_only_leading_byte_order_mark(raw_contents):
     """
@@ -14,6 +16,27 @@ def ensure_only_leading_byte_order_mark(raw_contents):
     return '\xff\xfe' + bom_stripped_contents
 
 
+def strip_nulls(raw_contents):
+    """
+    CRS data seems to have null control characters (NUL) in various fields, which confuse pandas
+    """
+    # need to specify double null, as it's UTF-16
+    return raw_contents.replace('\0\0', '')
+
+
+def convert_to_unix_line_endings(raw_contents):
+    return raw_contents.replace('\r\n', '\n')
+
+
+def clean_crs_file(raw_contents):
+    # yes, a little duplicative/wasteful in terms of performance, but easier to read/maintain
+    contents = raw_contents
+    contents = ensure_only_leading_byte_order_mark(contents)
+    contents = strip_nulls(contents)
+    contents = convert_to_unix_line_endings(contents)
+    return contents
+
+
 def process_zip_file(zip_path):
     with zipfile.ZipFile(zip_path) as zipped:
         namelist = zipped.namelist()
@@ -21,11 +44,11 @@ def process_zip_file(zip_path):
 
         inner_filename = namelist[0]
         inner_file = zipped.open(inner_filename)
-        leading_bom_contents = ensure_only_leading_byte_order_mark(inner_file.read())
+        cleaned_contents = clean_crs_file(inner_file.read())
         output_path = os.path.join(os.path.dirname(zip_path), inner_filename.replace(' ', '_'))
 
         with io.open(output_path, 'wb') as output_file:
-            output_file.write(leading_bom_contents)
+            output_file.write(cleaned_contents)
 
 if __name__ == "__main__":
     # do a test conversion
