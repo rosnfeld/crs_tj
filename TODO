@@ -1,0 +1,5 @@
+Formalize the setup process
+ - script that downloads the files via wget/curl/etc
+ - puts them in some sort of versioned directory
+ - unzips them, converts to strip redundant BOMs etc
+ - concatenates into a master file
