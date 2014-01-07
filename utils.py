@@ -21,8 +21,14 @@ def strip_nulls(unicode_contents):
     return unicode_contents.replace('\0', '')
 
 
-def convert_to_unix_line_endings(unicode_contents):
-    return unicode_contents.replace('\r\n', '\n')
+def clean_line_endings(unicode_contents):
+    """
+    Oddly there are some fields with embedded "\n" newlines, while "\r\n" is reserved for new rows.
+    pandas gets (understandably) confused by the embedded newlines.
+    To solve this, remove all \n from the file, and then convert \r to \n, so we end up with no embedded newlines and
+    only use \n for new rows, Unix-style.
+    """
+    return unicode_contents.replace('\n', '').replace('\r', '\n')
 
 
 def clean_crs_file(raw_contents):
@@ -30,7 +36,7 @@ def clean_crs_file(raw_contents):
     unicode_contents = raw_contents.decode('utf-16')
     unicode_contents = strip_additional_byte_order_marks(unicode_contents)
     unicode_contents = strip_nulls(unicode_contents)
-    unicode_contents = convert_to_unix_line_endings(unicode_contents)
+    unicode_contents = clean_line_endings(unicode_contents)
     # Intentionally encode as utf-8, to be less of a pain.
     # If you let python write the unicode to a file, it chooses this anyhow, I'm just trying to be explicit about it.
     return unicode_contents.encode('utf-8')
