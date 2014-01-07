@@ -1,6 +1,7 @@
-import zipfile
-import os
 import io
+import os
+import zipfile
+import pandas as pd
 
 
 def strip_additional_byte_order_marks(unicode_contents):
@@ -59,5 +60,18 @@ def convert_directory(source_dir, dest_dir):
             process_zip_file(source_path, dest_path)
 
 
+def build_master_file(processed_dir):
+    """
+    Concatenates the individual files into one pandas DataFrame and pickles that file back to the same directory
+    """
+    source_files = os.listdir(processed_dir)
+    psv_files = [filename for filename in sorted(source_files) if filename.endswith(".psv")]
+    psv_paths = [os.path.join(processed_dir, psv_file) for psv_file in psv_files]
+    crs_dataframes = [pd.read_csv(psv_path, delimiter='|', low_memory=False) for psv_path in psv_paths]
+    master_frame = pd.concat(crs_dataframes, ignore_index=True)
+    master_frame.to_pickle(os.path.join(processed_dir, 'all_data.pkl'))
+
+
 if __name__ == "__main__":
-    convert_directory('/home/andrew/oecd/crs/downloads/2014-01-05/', '/home/andrew/oecd/crs/processed/2014-01-05/')
+    # convert_directory('/home/andrew/oecd/crs/downloads/2014-01-05/', '/home/andrew/oecd/crs/processed/2014-01-05/')
+    build_master_file('/home/andrew/oecd/crs/processed/2014-01-05/')
