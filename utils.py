@@ -1,5 +1,5 @@
 import zipfile
-import os.path
+import os
 import io
 
 
@@ -35,7 +35,9 @@ def clean_crs_file(raw_contents):
     return unicode_contents.encode('utf-8')
 
 
-def process_zip_file(zip_path):
+def process_zip_file(zip_path, output_path):
+    print 'Converting', zip_path, 'to', output_path
+
     with zipfile.ZipFile(zip_path) as zipped:
         namelist = zipped.namelist()
         assert len(namelist) == 1
@@ -43,11 +45,19 @@ def process_zip_file(zip_path):
         inner_filename = namelist[0]
         inner_file = zipped.open(inner_filename)
         cleaned_contents = clean_crs_file(inner_file.read())
-        output_path = os.path.join(os.path.dirname(zip_path), inner_filename.replace(' ', '_'))
 
         with io.open(output_path, 'wb') as output_file:
             output_file.write(cleaned_contents)
 
+
+def convert_directory(source_dir, dest_dir):
+    source_files = os.listdir(source_dir)
+    for source_file in sorted(source_files):
+        if source_file.startswith("CRS") and source_file.endswith(".zip"):
+            source_path = os.path.join(source_dir, source_file)
+            dest_path = os.path.join(dest_dir, source_file.replace(' ', '_')).replace('.zip', '.psv')
+            process_zip_file(source_path, dest_path)
+
+
 if __name__ == "__main__":
-    # do a test conversion
-    process_zip_file('/home/andrew/oecd/crs/processed/2014-01-05/CRS 2000-01 data.zip')
+    convert_directory('/home/andrew/oecd/crs/downloads/2014-01-05/', '/home/andrew/oecd/crs/processed/2014-01-05/')
