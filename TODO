@@ -3,3 +3,6 @@ Formalize the setup process
  - puts them in some sort of versioned directory
  - unzips them, converts to strip redundant BOMs etc
  - concatenates into a master file
+
+Look at using PyTables/HDF5 to store data
+ - may be necessary due to large data size if we end up hosting on a modest (i.e. affordable) Amazon instance
