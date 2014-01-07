@@ -4,6 +4,10 @@ import zipfile
 import pandas as pd
 
 
+DELIMITER = '|'
+NUM_COLUMNS = 80
+
+
 def strip_additional_byte_order_marks(unicode_contents):
     """
     Creditor Reporting System data seems to be in utf-16, but with multiple "Byte Order Marks" (BOMs) per file.
@@ -31,12 +35,23 @@ def clean_line_endings(unicode_contents):
     return unicode_contents.replace('\n', '').replace('\r', '\n')
 
 
+def check_delimiter_counts(unicode_contents):
+    lines = unicode_contents.split('\n')
+    bad_lines = [line for line in lines if len(line) > 0 and line.count(DELIMITER) != NUM_COLUMNS - 1]
+    if bad_lines:
+        print "Warning", len(bad_lines), "bad lines found"
+
+
 def clean_crs_file(raw_contents):
     # yes, a little duplicative/wasteful in terms of performance, but easier to read/maintain
     unicode_contents = raw_contents.decode('utf-16')
     unicode_contents = strip_additional_byte_order_marks(unicode_contents)
     unicode_contents = strip_nulls(unicode_contents)
     unicode_contents = clean_line_endings(unicode_contents)
+
+    # a good sniff test
+    check_delimiter_counts(unicode_contents)
+
     # Intentionally encode as utf-8, to be less of a pain.
     # If you let python write the unicode to a file, it chooses this anyhow, I'm just trying to be explicit about it.
     return unicode_contents.encode('utf-8')
@@ -73,7 +88,7 @@ def build_master_file(processed_dir):
     source_files = os.listdir(processed_dir)
     psv_files = [filename for filename in sorted(source_files) if filename.endswith(".psv")]
     psv_paths = [os.path.join(processed_dir, psv_file) for psv_file in psv_files]
-    crs_dataframes = [pd.read_csv(psv_path, delimiter='|', low_memory=False) for psv_path in psv_paths]
+    crs_dataframes = [pd.read_csv(psv_path, delimiter=DELIMITER, low_memory=False) for psv_path in psv_paths]
     master_frame = pd.concat(crs_dataframes, ignore_index=True)
     master_frame.to_pickle(os.path.join(processed_dir, 'all_data.pkl'))
 
