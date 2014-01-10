@@ -90,9 +90,12 @@ def build_master_file(processed_dir):
     psv_paths = [os.path.join(processed_dir, psv_file) for psv_file in psv_files]
     crs_dataframes = [pd.read_csv(psv_path, delimiter=DELIMITER, low_memory=False) for psv_path in psv_paths]
     master_frame = pd.concat(crs_dataframes, ignore_index=True)
-    master_frame.to_pickle(os.path.join(processed_dir, 'all_data.pkl'))
+
+    output_path = os.path.join(processed_dir, 'all_data.pkl')
+    master_frame.to_pickle(output_path)
+    print "Wrote", output_path
 
 
 if __name__ == "__main__":
-    # convert_directory('/home/andrew/oecd/crs/downloads/2014-01-05/', '/home/andrew/oecd/crs/processed/2014-01-05/')
-    build_master_file('/home/andrew/oecd/crs/processed/2014-01-05/')
+    convert_directory('/home/andrew/oecd/crs/downloads/2014-01-10/', '/home/andrew/oecd/crs/processed/2014-01-10/')
+    build_master_file('/home/andrew/oecd/crs/processed/2014-01-10/')
