@@ -32,3 +32,6 @@ nosetests.xml
 
 # Pycharm
 .idea
+
+# scratch databases
+*.sqlite3
