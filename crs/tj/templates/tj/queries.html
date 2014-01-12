@@ -7,7 +7,7 @@
 {% if queries %}
     <ul>
     {% for query in queries %}
-        <li>{{ query.text }}</li>
+        <li><a href="{% url 'query_edit' query.id %}">{{ query.text }}</a></li>
     {% endfor %}
     </ul>
 {% else %}

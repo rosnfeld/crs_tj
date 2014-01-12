@@ -3,6 +3,8 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render, get_object_or_404
 from tj.models import Query, QueryCombination
 
+import query_processor
+
 
 def index(request):
     return render(request, 'tj/index.html')
@@ -41,5 +43,7 @@ def query_process(request):
 
 def query_edit(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
-    # TODO actually run the query here, not in the HTML
-    return render(request, 'tj/query_edit.html', {'query': query})
+
+    rows = query_processor.find_rows_matching_query_text(query.text)
+
+    return render(request, 'tj/query_edit.html', {'query': query, 'rows': rows})
