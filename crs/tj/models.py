@@ -23,9 +23,9 @@ class ManualExclusion(models.Model):
         return unicode(self.pandas_row_id)
 
 
-class QueryUnion(models.Model):
+class QueryCombination(models.Model):
     """
-    Models the union of several Queries.
+    Models the combination of several Queries into a "mega-query".
     Note that the Query results, pre-manual exclusion, are unioned together,
     and then the manual exclusions also get unioned together and applied,
     so it's not exactly the "straight" union of Query results.

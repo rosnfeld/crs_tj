@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from tj.models import Query, QueryUnion
+from tj.models import Query, QueryCombination
 
 
 def index(request):
@@ -12,5 +12,5 @@ def queries_home(request):
 
 
 def query_combos_home(request):
-    query_combos = QueryUnion.objects.all()
+    query_combos = QueryCombination.objects.all()
     return render(request, 'tj/query_combos.html', {'query_combos': query_combos})
