@@ -1,3 +1,5 @@
+Add ability to delete queries?
+
 Formalize the setup process
  - script that downloads the files via wget/curl/etc
  - puts them in some sort of versioned directory
@@ -10,4 +12,4 @@ Look at using PyTables/HDF5 to store data
 Lock down Django
  - toggle debug to false
  - externalize secret key
- 
+ - add authentication/login, maybe permissions?
