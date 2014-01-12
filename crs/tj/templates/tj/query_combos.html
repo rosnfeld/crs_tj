@@ -1,0 +1,16 @@
+<html>
+<head>
+    <title>Query Combinations Home</title>
+</head>
+<body>
+{% if query_combos %}
+    <ul>
+    {% for query_combo in query_combos %}
+        <li>{{ query_combo.name }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    No query combinations currently configured.
+{% endif %}
+</body>
+</html>

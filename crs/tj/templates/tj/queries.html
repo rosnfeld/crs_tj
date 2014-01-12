@@ -1,0 +1,16 @@
+<html>
+<head>
+    <title>Queries Home</title>
+</head>
+<body>
+{% if queries %}
+    <ul>
+    {% for query in queries %}
+        <li>{{ query.text }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    No queries currently configured.
+{% endif %}
+</body>
+</html>
