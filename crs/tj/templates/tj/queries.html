@@ -3,6 +3,7 @@
     <title>Queries Home</title>
 </head>
 <body>
+<h3>Existing Queries:</h3>
 {% if queries %}
     <ul>
     {% for query in queries %}
@@ -12,5 +13,8 @@
 {% else %}
     No queries currently configured.
 {% endif %}
+<p>
+    <a href="{%  url 'query_create' %}">Create a new query</a>
+</p>
 </body>
 </html>
