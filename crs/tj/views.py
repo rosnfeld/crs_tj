@@ -1,5 +1,6 @@
-from django.http import HttpResponseRedirect
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from tj.models import Query, QueryCombination
 
@@ -44,6 +45,20 @@ def query_process(request):
 def query_edit(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
 
-    rows = query_processor.find_rows_matching_query_text(query.text)
+    dataframe = query_processor.find_rows_matching_query_text(query.text)
+    row_list = [row for i, row in dataframe.iterrows()]
+
+    paginator = Paginator(row_list, 10)
+
+    page_number = request.GET.get('page')
+
+    try:
+        rows = paginator.page(page_number)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        rows = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        rows = paginator.page(paginator.num_pages)
 
     return render(request, 'tj/query_edit.html', {'query': query, 'rows': rows})

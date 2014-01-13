@@ -8,38 +8,54 @@ Query: {{ query.text }} <!-- this should be editable? but then we really need to
 </div>
 <div>
 Results
-<table border="1">
-    <tr>
-        <th>Index</th>
-        <th>CRS ID</th>
-        <th>Year</th>
-        <th>Donor Name</th>
-        <th>Agency Name</th>
-        <th>Recipient Name</th>
-        <th>USD Committed (in 2012 dollars)</th>
-        <th>USD Disbursed (in 2012 dollars)</th>
-        <th>Project Number</th>
-        <th>Project Title</th>
-        <th>Short Description</th>
-        <th>Long Description</th>
-    </tr>
-{% for i, row in rows.iterrows %}
-    <tr>
-        <td>{{ i }}</td>
-        <td>{{ row.crsid }}</td>
-        <td>{{ row.Year }}</td>
-        <td>{{ row.donorname }}</td>
-        <td>{{ row.agencyname }}</td>
-        <td>{{ row.recipientname }}</td>
-        <td>{{ row.usd_commitment_defl }}</td>
-        <td>{{ row.usd_disbursement_defl }}</td>
-        <td>{{ row.projectnumber }}</td>
-        <td>{{ row.projecttitle }}</td>
-        <td>{{ row.shortdescription }}</td>
-        <td>{{ row.longdescription }}</td>
-    </tr>
-{% endfor %}
-</table>
+    <div class="pagination">
+        <span class="step-links">
+            {% if rows.has_previous %}
+                <a href="?page={{ rows.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ rows.number }} of {{ rows.paginator.num_pages }},
+                items {{ rows.start_index }} to {{ rows.end_index }} of {{ rows.paginator.count }}
+            </span>
+
+            {% if rows.has_next %}
+                <a href="?page={{ rows.next_page_number }}">next</a>
+            {% endif %}
+        </span>
+    </div>
+    <table border="1">
+        <tr>
+            <th>Index</th>
+            <th>CRS ID</th>
+            <th>Year</th>
+            <th>Donor Name</th>
+            <th>Agency Name</th>
+            <th>Recipient Name</th>
+            <th>USD Committed (in 2012 dollars)</th>
+            <th>USD Disbursed (in 2012 dollars)</th>
+            <th>Project Number</th>
+            <th>Project Title</th>
+            <th>Short Description</th>
+            <th>Long Description</th>
+        </tr>
+        {% for row in rows %}
+            <tr>
+                <td>{{ row.name }}</td>
+                <td>{{ row.crsid }}</td>
+                <td>{{ row.Year }}</td>
+                <td>{{ row.donorname }}</td>
+                <td>{{ row.agencyname }}</td>
+                <td>{{ row.recipientname }}</td>
+                <td>{{ row.usd_commitment_defl }}</td>
+                <td>{{ row.usd_disbursement_defl }}</td>
+                <td>{{ row.projectnumber }}</td>
+                <td>{{ row.projecttitle }}</td>
+                <td>{{ row.shortdescription }}</td>
+                <td>{{ row.longdescription }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 </div>
 <div>
     <a href="{% url 'queries_home' %}">Queries Home</a>
