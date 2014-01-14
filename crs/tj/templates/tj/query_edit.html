@@ -4,6 +4,33 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
     </script>
     <script>
+        var manual_exclusions = {};
+
+        {% for manual_exclusion in query.manualexclusion_set.all %}
+            manual_exclusions['{{ manual_exclusion.pandas_row_id }}'] = true;
+        {% endfor %}
+
+        function updateRowStyleForManualExclusions(pandas_row_id) {
+            var row = document.getElementById('r_' + pandas_row_id);
+
+            // use strikethrough to indicate excluded rows
+            // maybe "faded" (low alpha) style would look nicer?
+            if (manual_exclusions[pandas_row_id]) {
+                row.style.textDecoration = 'line-through';
+            } else {
+                row.style.textDecoration = 'none';
+            }
+        }
+
+        function handleCheckbox(checkbox) {
+            // this substring bit is admittedly gross
+            // maybe we can do something like just have the id on the row, and do parent/child association
+            var pandas_row_id = checkbox.id.substring(2);
+            manual_exclusions[pandas_row_id] = !checkbox.checked;
+
+            updateRowStyleForManualExclusions(pandas_row_id);
+        }
+
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -35,9 +62,16 @@
                 // the response is passed to the function
                 success: function (json) {
                     var table_body = "";
-                    $.each(json, function(key, value) {
+                    $.each(json, function(pandas_row_id, row_map) {
+                        var checked = "checked";
+                        if (manual_exclusions[pandas_row_id]) {
+                            checked = "";
+                        }
+
                         var tbl_row = "";
-                        tbl_row += "<td>" + key + "</td>";
+                        tbl_row += "<td><input type='checkbox' id='c_" + pandas_row_id + "' " + checked +
+                                " onclick='handleCheckbox(this)'/> </td>";
+
                         tbl_row += "<td>" + this.crsid + "</td>";
                         tbl_row += "<td>" + this.Year + "</td>";
                         tbl_row += "<td>" + this.donorname + "</td>";
@@ -54,9 +88,11 @@
                         tbl_row += "<td>" + this.shortdescription + "</td>";
                         tbl_row += "<td>" + this.longdescription + "</td>";
 
-                        table_body += "<tr id=" + key + ">" + tbl_row + "</tr>";
+                        table_body += "<tr id='r_" + pandas_row_id + "'>" + tbl_row + "</tr>";
                     })
                     $("#results_table tbody").html(table_body);
+
+                    $.each(json, function(pandas_row_id, row_map) { updateRowStyleForManualExclusions(pandas_row_id) });
                 },
 
                 // code to run if the request fails; the raw request and status codes are passed to the function
@@ -67,11 +103,22 @@
         }
 
         function updateQuery() {
+            var query_text = document.getElementById('query_text').value;
+
+            var manual_exclusion_ids = [];
+            for (var pandas_row_id in manual_exclusions) {
+                if (manual_exclusions.hasOwnProperty(pandas_row_id) && manual_exclusions[pandas_row_id]) {
+                    manual_exclusion_ids.push(pandas_row_id);
+                }
+            }
+
             $.ajax({
                 url: "{% url 'query_update' query.id %}",
 
+                // could try posting JSON here, but it seems a bit ugly on the server side
                 data: {
-                    query_text: document.getElementById('query_text').value
+                    query_text: query_text,
+                    manual_exclusion_ids: manual_exclusion_ids
                 },
 
                 type: "POST",
@@ -92,13 +139,13 @@
 <div>
     <label>Query text: <input type="text" id="query_text" value="{{ query.text }}"/></label>
     <input type="button" value="Update" onclick="updateQuery()"/>
+    <a href="{% url 'queries_home' %}">Queries Home</a>
 </div>
 <div>
-Results
     <table id="results_table" border="1">
         <thead>
             <tr>
-                <th>Index</th>
+                <th>Include</th>
                 <th>CRS ID</th>
                 <th>Year</th>
                 <th>Donor</th>
@@ -116,9 +163,6 @@ Results
             <tr><td>Running query...</td></tr>
         </tbody>
     </table>
-</div>
-<div>
-    <a href="{% url 'queries_home' %}">Queries Home</a>
 </div>
 </body>
 </html>

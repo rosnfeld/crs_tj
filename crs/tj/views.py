@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
 from tj.models import Query, QueryCombination
 
@@ -69,14 +69,23 @@ def query_update(request, query_id):
 
     try:
         query_text = request.POST['query_text']
+        manual_exclusion_ids = [int(id) for id in request.POST.getlist('manual_exclusion_ids[]')]
     except KeyError:
-        return render(request, 'tj/query_create.html', {'error_message': 'Bad form data'})
+        return HttpResponseBadRequest('Bad form data')  # could be JSON?
 
     if not query_text:
-        return render(request, 'tj/query_create.html', {'error_message': 'No text entered'})
+        return HttpResponseBadRequest('No text entered')
 
     query.text = query_text
     query.save()
+
+    # slightly inefficient, but easiest is to just wipe the existing exclusions and start fresh
+    existing_exclusions = query.manualexclusion_set.all()
+    for exclusion in existing_exclusions:
+        exclusion.delete()
+
+    for manual_exclusion_id in manual_exclusion_ids:
+        query.manualexclusion_set.create(pandas_row_id=manual_exclusion_id)
 
     return HttpResponseRedirect(reverse('query_edit', args=(query.id,)))
 
