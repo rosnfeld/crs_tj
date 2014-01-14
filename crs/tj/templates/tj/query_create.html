@@ -6,7 +6,7 @@
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 <form action="{% url 'query_post' %}" method="post">
     {% csrf_token %}
-    <label>Query text<input type="text" name="query_text"/></label>
+    <label>Query text: <input type="text" name="query_text"/></label>
     <input type="submit" value="Submit"/>
 </form>
 </body>

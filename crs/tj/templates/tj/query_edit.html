@@ -4,6 +4,19 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
     </script>
     <script>
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            crossDomain: false, // obviates need for sameOrigin test
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+                }
+            }
+        });
+
         function refreshTable() {
             $.ajax({
                 url: "{% url 'query_run_json' query.id %}",
@@ -53,12 +66,32 @@
             });
         }
 
+        function updateQuery() {
+            $.ajax({
+                url: "{% url 'query_update' query.id %}",
+
+                data: {
+                    query_text: document.getElementById('query_text').value
+                },
+
+                type: "POST",
+
+                success: refreshTable,
+
+                error: function (xhr, status) {
+                    alert("Failed to update query");
+                }
+            });
+
+        }
+
         $(document).ready(refreshTable);
     </script>
 </head>
 <body>
 <div>
-Query: {{ query.text }} <!-- this should be editable? but then we really need to reload the rows -->
+    <label>Query text: <input type="text" id="query_text" value="{{ query.text }}"/></label>
+    <input type="button" value="Update" onclick="updateQuery()"/>
 </div>
 <div>
 Results

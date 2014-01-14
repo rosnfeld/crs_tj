@@ -64,6 +64,23 @@ def query_edit(request, query_id):
     return render(request, 'tj/query_edit.html', {'query': query, 'rows': rows})
 
 
+def query_update(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+
+    try:
+        query_text = request.POST['query_text']
+    except KeyError:
+        return render(request, 'tj/query_create.html', {'error_message': 'Bad form data'})
+
+    if not query_text:
+        return render(request, 'tj/query_create.html', {'error_message': 'No text entered'})
+
+    query.text = query_text
+    query.save()
+
+    return HttpResponseRedirect(reverse('query_edit', args=(query.id,)))
+
+
 def query_run_json(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
 
