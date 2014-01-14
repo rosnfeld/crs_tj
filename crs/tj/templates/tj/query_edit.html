@@ -4,52 +4,56 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
     </script>
     <script>
-        $.ajax({
-            url: "{% url 'query_run_json' query.id %}",
+        function refreshTable() {
+            $.ajax({
+                url: "{% url 'query_run_json' query.id %}",
 
-            // data to send (will be converted to a query string)
-            data: {
-                id: {{ query.id }}
-            },
+                // data to send (will be converted to a query string)
+                data: {
+                    id: {{ query.id }}
+                },
 
-            type: "GET",
+                type: "GET",
 
-            // type of data we expect back
-            dataType: "json",
+                // type of data we expect back
+                dataType: "json",
 
-            // code to run if the request succeeds;
-            // the response is passed to the function
-            success: function (json) {
-                var table_body = "";
-                $.each(json, function () {
-                    var tbl_row = "";
-                    tbl_row += "<td>" + 'TODO' + "</td>";
-                    tbl_row += "<td>" + this.crsid + "</td>";
-                    tbl_row += "<td>" + this.Year + "</td>";
-                    tbl_row += "<td>" + this.donorname + "</td>";
-                    tbl_row += "<td>" + this.agencyname + "</td>";
-                    tbl_row += "<td>" + this.recipientname + "</td>";
+                // code to run if the request succeeds;
+                // the response is passed to the function
+                success: function (json) {
+                    var table_body = "";
+                    $.each(json, function(key, value) {
+                        var tbl_row = "";
+                        tbl_row += "<td>" + key + "</td>";
+                        tbl_row += "<td>" + this.crsid + "</td>";
+                        tbl_row += "<td>" + this.Year + "</td>";
+                        tbl_row += "<td>" + this.donorname + "</td>";
+                        tbl_row += "<td>" + this.agencyname + "</td>";
+                        tbl_row += "<td>" + this.recipientname + "</td>";
 
-                    // could maybe preserve the nan/null here rather than filling in zero
-                    var disbursement = (this.usd_disbursement_defl || 0);
-                    tbl_row += "<td>" + disbursement.toFixed(6) + "</td>";
+                        // could maybe preserve the nan/null here rather than filling in zero
+                        var disbursement = (this.usd_disbursement_defl || 0);
+                        tbl_row += "<td>" + disbursement.toFixed(6) + "</td>";
 
-                    tbl_row += "<td>" + this.sectorname + "</td>";
-                    tbl_row += "<td>" + this.projectnumber + "</td>";
-                    tbl_row += "<td>" + this.projecttitle + "</td>";
-                    tbl_row += "<td>" + this.shortdescription + "</td>";
-                    tbl_row += "<td>" + this.longdescription + "</td>";
+                        tbl_row += "<td>" + this.sectorname + "</td>";
+                        tbl_row += "<td>" + this.projectnumber + "</td>";
+                        tbl_row += "<td>" + this.projecttitle + "</td>";
+                        tbl_row += "<td>" + this.shortdescription + "</td>";
+                        tbl_row += "<td>" + this.longdescription + "</td>";
 
-                    table_body += "<tr>" + tbl_row + "</tr>";
-                })
-                $("#results_table tbody").html(table_body);
-            },
+                        table_body += "<tr id=" + key + ">" + tbl_row + "</tr>";
+                    })
+                    $("#results_table tbody").html(table_body);
+                },
 
-            // code to run if the request fails; the raw request and status codes are passed to the function
-            error: function (xhr, status) {
-                alert("Failed to process query results");
-            }
-        });
+                // code to run if the request fails; the raw request and status codes are passed to the function
+                error: function (xhr, status) {
+                    alert("Failed to process query results");
+                }
+            });
+        }
+
+        $(document).ready(refreshTable);
     </script>
 </head>
 <body>
