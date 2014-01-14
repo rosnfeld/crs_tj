@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from tj.models import Query, QueryCombination
 
@@ -25,7 +25,7 @@ def query_create(request):
     return render(request, 'tj/query_create.html')
 
 
-def query_process(request):
+def query_post(request):
     try:
         query_text = request.POST['query_text']
     except KeyError:
@@ -62,3 +62,13 @@ def query_edit(request, query_id):
         rows = paginator.page(paginator.num_pages)
 
     return render(request, 'tj/query_edit.html', {'query': query, 'rows': rows})
+
+
+def query_run_json(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+
+    dataframe = query_processor.find_rows_matching_query_text(query.text)
+
+    json_text = dataframe.to_json(orient='index')
+
+    return HttpResponse(json_text, content_type="application/json")

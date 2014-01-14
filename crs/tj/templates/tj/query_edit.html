@@ -1,6 +1,56 @@
 <html>
 <head>
     <title>Edit Query</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
+    </script>
+    <script>
+        $.ajax({
+            url: "{% url 'query_run_json' query.id %}",
+
+            // data to send (will be converted to a query string)
+            data: {
+                id: {{ query.id }}
+            },
+
+            type: "GET",
+
+            // type of data we expect back
+            dataType: "json",
+
+            // code to run if the request succeeds;
+            // the response is passed to the function
+            success: function (json) {
+                var table_body = "";
+                $.each(json, function () {
+                    var tbl_row = "";
+                    tbl_row += "<td>" + 'TODO' + "</td>";
+                    tbl_row += "<td>" + this.crsid + "</td>";
+                    tbl_row += "<td>" + this.Year + "</td>";
+                    tbl_row += "<td>" + this.donorname + "</td>";
+                    tbl_row += "<td>" + this.agencyname + "</td>";
+                    tbl_row += "<td>" + this.recipientname + "</td>";
+
+                    // could maybe preserve the nan/null here rather than filling in zero
+                    var disbursement = (this.usd_disbursement_defl || 0);
+                    tbl_row += "<td>" + disbursement.toFixed(6) + "</td>";
+
+                    tbl_row += "<td>" + this.sectorname + "</td>";
+                    tbl_row += "<td>" + this.projectnumber + "</td>";
+                    tbl_row += "<td>" + this.projecttitle + "</td>";
+                    tbl_row += "<td>" + this.shortdescription + "</td>";
+                    tbl_row += "<td>" + this.longdescription + "</td>";
+
+                    table_body += "<tr>" + tbl_row + "</tr>";
+                })
+                $("#results_table tbody").html(table_body);
+            },
+
+            // code to run if the request fails; the raw request and status codes are passed to the function
+            error: function (xhr, status) {
+                alert("Failed to process query results");
+            }
+        });
+    </script>
 </head>
 <body>
 <div>
@@ -8,53 +58,26 @@ Query: {{ query.text }} <!-- this should be editable? but then we really need to
 </div>
 <div>
 Results
-    <div class="pagination">
-        <span class="step-links">
-            {% if rows.has_previous %}
-                <a href="?page={{ rows.previous_page_number }}">previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ rows.number }} of {{ rows.paginator.num_pages }},
-                items {{ rows.start_index }} to {{ rows.end_index }} of {{ rows.paginator.count }}
-            </span>
-
-            {% if rows.has_next %}
-                <a href="?page={{ rows.next_page_number }}">next</a>
-            {% endif %}
-        </span>
-    </div>
-    <table border="1">
-        <tr>
-            <th>Index</th>
-            <th>CRS ID</th>
-            <th>Year</th>
-            <th>Donor</th>
-            <th>Agency</th>
-            <th>Recipient</th>
-            <th>USD Disbursed (millions of 2012 dollars)</th>
-            <th>Sector</th>
-            <th>Project Number</th>
-            <th>Project Title</th>
-            <th>Short Description</th>
-            <th>Long Description</th>
-        </tr>
-        {% for row in rows %}
+    <table id="results_table" border="1">
+        <thead>
             <tr>
-                <td>{{ row.name }}</td>
-                <td>{{ row.crsid }}</td>
-                <td>{{ row.Year }}</td>
-                <td>{{ row.donorname }}</td>
-                <td>{{ row.agencyname }}</td>
-                <td>{{ row.recipientname }}</td>
-                <td>{{ row.usd_disbursement_defl | floatformat:6 }}</td>
-                <td>{{ row.sectorname }}</td>
-                <td>{{ row.projectnumber }}</td>
-                <td>{{ row.projecttitle }}</td>
-                <td>{{ row.shortdescription }}</td>
-                <td>{{ row.longdescription }}</td>
+                <th>Index</th>
+                <th>CRS ID</th>
+                <th>Year</th>
+                <th>Donor</th>
+                <th>Agency</th>
+                <th>Recipient</th>
+                <th>USD Disbursed (millions of 2012 dollars)</th>
+                <th>Sector</th>
+                <th>Project Number</th>
+                <th>Project Title</th>
+                <th>Short Description</th>
+                <th>Long Description</th>
             </tr>
-        {% endfor %}
+        </thead>
+        <tbody>
+            <tr><td>Running query...</td></tr>
+        </tbody>
     </table>
 </div>
 <div>
