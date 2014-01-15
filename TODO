@@ -1,5 +1,8 @@
 Look at using PyTables/HDF5 to store data
  - may be necessary due to large data size if we end up hosting on a modest (i.e. affordable) Amazon instance
+ - turns out this doesn't work as PyTables can't handle variable-length strings
+    - we can't afford to use the maximum string length in our columns, that would be prohibitively large
+ - maybe we use h5py, or maybe look at sqlite/other solutions
 
 Also look at SQL/NoSQL databases with some sort of indexing
  - not sure what will have best performance
