@@ -16,9 +16,9 @@ def queries_home(request):
     return render(request, 'tj/queries.html', {'queries': queries})
 
 
-def query_combos_home(request):
+def combos_home(request):
     query_combos = QueryCombination.objects.all()
-    return render(request, 'tj/query_combos.html', {'query_combos': query_combos})
+    return render(request, 'tj/combos.html', {'combos': query_combos})
 
 
 def query_create(request):

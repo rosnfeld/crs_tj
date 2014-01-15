@@ -3,10 +3,10 @@
     <title>Query Combinations Home</title>
 </head>
 <body>
-{% if query_combos %}
+{% if combos %}
     <ul>
-    {% for query_combo in query_combos %}
-        <li>{{ query_combo.name }}</li>
+    {% for combo in combos %}
+        <li>{{ combo.name }}</li>
     {% endfor %}
     </ul>
 {% else %}
