@@ -3,14 +3,22 @@
     <title>Query Combinations Home</title>
 </head>
 <body>
+<h3>Existing Query Combinations:</h3>
 {% if combos %}
     <ul>
     {% for combo in combos %}
-        <li>{{ combo.name }}</li>
+        <li><a href="{% url 'combo_edit' combo.id %}">{{ combo.name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     No query combinations currently configured.
 {% endif %}
+
+<p>
+    <a href="{%  url 'combo_create' %}">Create a new query combination</a>
+</p>
+<p>
+    <a href="{% url 'home' %}">Home</a>
+</p>
 </body>
 </html>

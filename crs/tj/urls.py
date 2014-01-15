@@ -3,12 +3,15 @@ from django.conf.urls import patterns, url
 from tj import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.index, name='index'),
-    url(r'^queries$', views.queries_home, name='queries_home'),
+    url(r'^$', views.index, name='home'),
+    url(r'^query/?$', views.queries_home, name='queries_home'),
     url(r'^query/create$', views.query_create, name='query_create'),
     url(r'^query/post$', views.query_post, name='query_post'),
     url(r'^query/(?P<query_id>\d+)/edit$', views.query_edit, name='query_edit'),
     url(r'^query/(?P<query_id>\d+)/update$', views.query_update, name='query_update'),
     url(r'^query/(?P<query_id>\d+)/run.json', views.query_run_json, name='query_run_json'),
-    url(r'^combos$', views.combos_home, name='combos_home'),
+    url(r'^combo/?$', views.combos_home, name='combos_home'),
+    url(r'^combo/create$', views.combo_create, name='combo_create'),
+    url(r'^combo/post$', views.combo_post, name='combo_post'),
+    url(r'^combo/(?P<combo_id>\d+)/edit$', views.combo_edit, name='combo_edit'),
 )

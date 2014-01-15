@@ -1,0 +1,14 @@
+<html>
+<head>
+    <title>Create Query Combination</title>
+</head>
+<body>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<form action="{% url 'combo_post' %}" method="post">
+    {% csrf_token %}
+    <label>Query combination name: <input type="text" name="combo_name"/></label>
+    <input type="submit" value="Submit"/>
+</form>
+<a href="{% url 'combos_home' %}">Query Combinations</a>
+</body>
+</html>

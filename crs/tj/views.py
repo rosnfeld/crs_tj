@@ -1,4 +1,3 @@
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
@@ -44,24 +43,7 @@ def query_post(request):
 
 def query_edit(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
-
-    dataframe = query_processor.find_rows_matching_query_text(query.text)
-    row_list = [row for i, row in dataframe.iterrows()]
-
-    paginator = Paginator(row_list, 10)
-
-    page_number = request.GET.get('page')
-
-    try:
-        rows = paginator.page(page_number)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        rows = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        rows = paginator.page(paginator.num_pages)
-
-    return render(request, 'tj/query_edit.html', {'query': query, 'rows': rows})
+    return render(request, 'tj/query_edit.html', {'query': query})
 
 
 def query_update(request, query_id):
@@ -98,3 +80,27 @@ def query_run_json(request, query_id):
     json_text = dataframe.to_json(orient='index')
 
     return HttpResponse(json_text, content_type="application/json")
+
+
+def combo_create(request):
+    return render(request, 'tj/combo_create.html')
+
+
+def combo_post(request):
+    try:
+        combo_name = request.POST['combo_name']
+    except KeyError:
+        return render(request, 'tj/combo_create.html', {'error_message': 'Bad form data'})
+
+    if not combo_name:
+        return render(request, 'tj/combo_create.html', {'error_message': 'No name entered'})
+
+    combo = QueryCombination(name=combo_name)
+    combo.save()
+
+    return HttpResponseRedirect(reverse('combo_edit', args=(combo.id,)))
+
+
+def combo_edit(request, combo_id):
+    combo = get_object_or_404(QueryCombination, pk=combo_id)
+    return render(request, 'tj/combo_edit.html', {'combo': combo})
