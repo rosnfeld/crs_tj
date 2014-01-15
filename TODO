@@ -9,6 +9,8 @@ Also look at SQL/NoSQL databases with some sort of indexing
 
 Add ability to delete queries?
 
+Figure out a way to collapse duplication between create/edit
+
 Formalize the setup process
  - script that downloads the files via wget/curl/etc
  - puts them in some sort of versioned directory
