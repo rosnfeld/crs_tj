@@ -137,7 +137,8 @@
 <body>
 <div>
     <label>Query text: <input type="text" id="query_text" value="{{ query.text }}"/></label>
-    <input type="button" value="Update" onclick="updateQuery()"/>
+    <input type="button" value="Update Query" onclick="updateQuery()"/>
+    <input type="button" value="Export CSV" onclick="window.open('{% url 'query_export_csv' query.id %}')"/>
 </div>
 <p>
     <a href="{% url 'queries_home' %}">Queries Home</a>

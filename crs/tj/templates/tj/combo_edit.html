@@ -113,7 +113,8 @@
         </label>
     </div>
 <div>
-    <input type="button" value="Update" onclick="updateCombo()"/>
+    <input type="button" value="Update Query Combination" onclick="updateCombo()"/>
+    <input type="button" value="Export CSV" onclick="window.open('{% url 'combo_export_csv' combo.id %}')"/>
 </div>
 <p>
     <a href="{% url 'combos_home' %}">Query Combinations</a>

@@ -1,4 +1,5 @@
 import pandas as pd
+import StringIO
 
 # HACK just to get this up and running
 DATA_FILE = "/home/andrew/oecd/crs/processed/2014-01-05/sector_152.pkl"
@@ -41,3 +42,18 @@ def get_matching_rows_for_combo(combo):
             rows['excluded'][manual_exclusion.pandas_row_id] = True
 
     return rows
+
+
+def convert_to_csv_string_for_export(dataframe):
+    """
+    Get a string containing a CSV representation of the rows returned by a query, removing excluded rows.
+    Maybe belongs more in the view code directly but nice to keep pandas code all in one file.
+    """
+    dataframe = dataframe[~dataframe.excluded]
+    del dataframe['excluded']
+
+    stringio = StringIO.StringIO()
+
+    dataframe.to_csv(stringio, index=False)
+
+    return stringio.getvalue()

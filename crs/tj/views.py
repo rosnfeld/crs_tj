@@ -82,6 +82,18 @@ def query_run_json(request, query_id):
     return HttpResponse(json_text, content_type="application/json")
 
 
+def query_export_csv(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+
+    dataframe = query_processor.get_matching_rows_for_query(query)
+    csv_text = query_processor.convert_to_csv_string_for_export(dataframe)
+
+    response = HttpResponse(csv_text, content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="%s.csv"' % query.text
+
+    return response
+
+
 def combo_create(request):
     possible_queries = Query.objects.all()
     return render(request, 'tj/combo_create.html', {'possible_queries': possible_queries})
@@ -150,3 +162,15 @@ def combo_run_json(request, combo_id):
     json_text = dataframe.to_json(orient='index')
 
     return HttpResponse(json_text, content_type="application/json")
+
+
+def combo_export_csv(request, combo_id):
+    combo = get_object_or_404(QueryCombination, pk=combo_id)
+
+    dataframe = query_processor.get_matching_rows_for_combo(combo)
+    csv_text = query_processor.convert_to_csv_string_for_export(dataframe)
+
+    response = HttpResponse(csv_text, content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="%s.csv"' % combo.name
+
+    return response
