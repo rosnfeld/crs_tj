@@ -4,6 +4,12 @@ Use template snippets or custom tags to remove duplication in various views
  - standard "breadcrumb" type navigation at top
  - some of the duplication in table views
 
+Come up with some sort of canonical row id
+ - if data keeps updating, pandas row ids aren't exactly stable
+ - it's somewhat crazy that crsid is not unique
+ - could maybe build an ID out of other columns
+   - and just excluding based on project id shouldn't do too much harm?
+
 Look at using PyTables/HDF5 to store data
  - may be necessary due to large data size if we end up hosting on a modest (i.e. affordable) Amazon instance
  - turns out this doesn't work as PyTables can't handle variable-length strings
