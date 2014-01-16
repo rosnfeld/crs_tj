@@ -1,3 +1,9 @@
+<perhaps I could be filing some of these as "issues" in GitHub?>
+
+Use template snippets or custom tags to remove duplication in various views
+ - standard "breadcrumb" type navigation at top
+ - some of the duplication in table views
+
 Look at using PyTables/HDF5 to store data
  - may be necessary due to large data size if we end up hosting on a modest (i.e. affordable) Amazon instance
  - turns out this doesn't work as PyTables can't handle variable-length strings
