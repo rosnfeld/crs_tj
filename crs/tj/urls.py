@@ -14,4 +14,6 @@ urlpatterns = patterns('',
     url(r'^combo/create$', views.combo_create, name='combo_create'),
     url(r'^combo/post$', views.combo_post, name='combo_post'),
     url(r'^combo/(?P<combo_id>\d+)/edit$', views.combo_edit, name='combo_edit'),
+    url(r'^combo/(?P<combo_id>\d+)/update$', views.combo_update, name='combo_update'),
+    url(r'^combo/(?P<combo_id>\d+)/run.json', views.combo_run_json, name='combo_run_json'),
 )

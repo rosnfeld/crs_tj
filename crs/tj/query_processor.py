@@ -17,3 +17,27 @@ def find_rows_matching_query_text(text):
     matching_longdescription = FRAME.longdescription.apply(row_filter)
 
     return FRAME[matching_projecttitle | matching_shortdescription | matching_longdescription]
+
+
+def get_matching_rows_for_query(query):
+    # eventually process other query components beyond just text
+    rows = find_rows_matching_query_text(query.text)
+    rows['excluded'] = False
+    for manual_exclusion in query.manualexclusion_set.all():
+        rows['excluded'][manual_exclusion.pandas_row_id] = True
+
+    return rows
+
+
+def get_matching_rows_for_combo(combo):
+    text_list = [query.text for query in combo.queries.all()]
+    results = [find_rows_matching_query_text(text) for text in text_list]
+    rows = pd.concat(results).drop_duplicates()
+
+    # if excluded in one query, row is excluded from the combination
+    rows['excluded'] = False
+    for query in combo.queries.all():
+        for manual_exclusion in query.manualexclusion_set.all():
+            rows['excluded'][manual_exclusion.pandas_row_id] = True
+
+    return rows

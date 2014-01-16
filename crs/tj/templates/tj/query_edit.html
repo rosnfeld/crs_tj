@@ -6,10 +6,6 @@
     <script>
         var manual_exclusions = {};
 
-        {% for manual_exclusion in query.manualexclusion_set.all %}
-            manual_exclusions['{{ manual_exclusion.pandas_row_id }}'] = true;
-        {% endfor %}
-
         function updateRowStyleForManualExclusions(pandas_row_id) {
             var row = document.getElementById('r_' + pandas_row_id);
 
@@ -61,11 +57,15 @@
                 // code to run if the request succeeds;
                 // the response is passed to the function
                 success: function (json) {
+                    // refresh manual exclusions from server
+                    manual_exclusions = {};
+
                     var table_body = "";
                     $.each(json, function(pandas_row_id, row_map) {
                         var checked = "checked";
-                        if (manual_exclusions[pandas_row_id]) {
+                        if (this.excluded) {
                             checked = "";
+                            manual_exclusions[pandas_row_id] = true;
                         }
 
                         var tbl_row = "";
@@ -129,7 +129,6 @@
                     alert("Failed to update query");
                 }
             });
-
         }
 
         $(document).ready(refreshTable);
@@ -139,8 +138,13 @@
 <div>
     <label>Query text: <input type="text" id="query_text" value="{{ query.text }}"/></label>
     <input type="button" value="Update" onclick="updateQuery()"/>
-    <a href="{% url 'queries_home' %}">Queries Home</a>
 </div>
+<p>
+    <a href="{% url 'queries_home' %}">Queries Home</a>
+</p>
+<p>
+    <a href="{% url 'home' %}">Home</a>
+</p>
 <div>
     <table id="results_table" border="1">
         <thead>

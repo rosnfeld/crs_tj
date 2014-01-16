@@ -75,7 +75,7 @@ def query_update(request, query_id):
 def query_run_json(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
 
-    dataframe = query_processor.find_rows_matching_query_text(query.text)
+    dataframe = query_processor.get_matching_rows_for_query(query)
 
     json_text = dataframe.to_json(orient='index')
 
@@ -114,3 +114,39 @@ def combo_edit(request, combo_id):
     combo = get_object_or_404(QueryCombination, pk=combo_id)
     possible_queries = Query.objects.all()
     return render(request, 'tj/combo_edit.html', {'combo': combo, 'possible_queries': possible_queries})
+
+
+def combo_update(request, combo_id):
+    combo = get_object_or_404(QueryCombination, pk=combo_id)
+
+    try:
+        combo_name = request.POST['combo_name']
+        query_ids = [int(id) for id in request.POST.getlist('query_ids[]')]
+    except KeyError:
+        return HttpResponseBadRequest('Bad form data')  # could be JSON?
+
+    if not combo_name:
+        return HttpResponseBadRequest('No name entered')
+
+    combo.name = combo_name
+    combo.save()
+
+    # slightly inefficient, but easiest to just wipe the queries and start over
+    existing_queries = combo.queries.all()
+    for query in existing_queries:
+        combo.queries.remove(query)
+
+    for query_id in query_ids:
+        combo.queries.add(query_id)
+
+    return HttpResponseRedirect(reverse('combo_edit', args=(combo.id,)))
+
+
+def combo_run_json(request, combo_id):
+    combo = get_object_or_404(QueryCombination, pk=combo_id)
+
+    dataframe = query_processor.get_matching_rows_for_combo(combo)
+
+    json_text = dataframe.to_json(orient='index')
+
+    return HttpResponse(json_text, content_type="application/json")

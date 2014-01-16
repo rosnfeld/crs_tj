@@ -1,12 +1,105 @@
 <html>
 <head>
     <title>Edit Query Combination</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
+    </script>
+    <script>
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            crossDomain: false, // obviates need for sameOrigin test
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+                }
+            }
+        });
+
+        function refreshTable() {
+            $.ajax({
+                url: "{% url 'combo_run_json' combo.id %}",
+
+                // data to send (will be converted to a query string)
+                data: {
+                    id: {{ combo.id }}
+                },
+
+                type: "GET",
+
+                // type of data we expect back
+                dataType: "json",
+
+                // code to run if the request succeeds;
+                // the response is passed to the function
+                success: function (json) {
+                    var table_body = "";
+                    $.each(json, function(pandas_row_id, row_map) {
+                        if (this.excluded) {
+                            return;
+                        }
+
+                        var tbl_row = "";
+                        tbl_row += "<td>" + this.crsid + "</td>";
+                        tbl_row += "<td>" + this.Year + "</td>";
+                        tbl_row += "<td>" + this.donorname + "</td>";
+                        tbl_row += "<td>" + this.agencyname + "</td>";
+                        tbl_row += "<td>" + this.recipientname + "</td>";
+
+                        // could maybe preserve the nan/null here rather than filling in zero
+                        var disbursement = (this.usd_disbursement_defl || 0);
+                        tbl_row += "<td>" + disbursement.toFixed(6) + "</td>";
+
+                        tbl_row += "<td>" + this.sectorname + "</td>";
+                        tbl_row += "<td>" + this.projectnumber + "</td>";
+                        tbl_row += "<td>" + this.projecttitle + "</td>";
+                        tbl_row += "<td>" + this.shortdescription + "</td>";
+                        tbl_row += "<td>" + this.longdescription + "</td>";
+
+                        table_body += "<tr id='r_" + pandas_row_id + "'>" + tbl_row + "</tr>";
+                    })
+                    $("#results_table tbody").html(table_body);
+                },
+
+                // code to run if the request fails; the raw request and status codes are passed to the function
+                error: function (xhr, status) {
+                    alert("Failed to process combo results");
+                }
+            });
+        }
+
+        function updateCombo() {
+            var combo_name = document.getElementById('combo_name').value;
+            var query_ids = $('#query_ids').val();
+
+            $.ajax({
+                url: "{% url 'combo_update' combo.id %}",
+
+                // could try posting JSON here, but it seems a bit ugly on the server side
+                data: {
+                    combo_name: combo_name,
+                    query_ids: query_ids
+                },
+
+                type: "POST",
+
+                success: refreshTable,
+
+                error: function (xhr, status) {
+                    alert("Failed to update combo");
+                }
+            });
+        }
+
+        $(document).ready(refreshTable);
+    </script>
 </head>
 <body>
-{{ combo.name }}
+    <label>Query combination name: <input type="text" id="combo_name" value="{{ combo.name }}"/></label>
     <div>
         <label>Included Queries:
-            <select multiple="multiple" name="query_ids">
+            <select multiple="multiple" id="query_ids">
                 {% for query in possible_queries %}
                     <option value="{{ query.id }}"
                             {% if query in combo.queries.all %}
@@ -19,11 +112,36 @@
             </select>
         </label>
     </div>
+<div>
+    <input type="button" value="Update" onclick="updateCombo()"/>
+</div>
 <p>
     <a href="{% url 'combos_home' %}">Query Combinations</a>
 </p>
 <p>
     <a href="{% url 'home' %}">Home</a>
 </p>
+<div>
+    <table id="results_table" border="1">
+        <thead>
+            <tr>
+                <th>CRS ID</th>
+                <th>Year</th>
+                <th>Donor</th>
+                <th>Agency</th>
+                <th>Recipient</th>
+                <th>USD Disbursed (millions of 2012 dollars)</th>
+                <th>Sector</th>
+                <th>Project Number</th>
+                <th>Project Title</th>
+                <th>Short Description</th>
+                <th>Long Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Running queries...</td></tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>
