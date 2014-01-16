@@ -2,7 +2,7 @@ import pandas as pd
 import StringIO
 
 # HACK just to get this up and running
-DATA_FILE = "/home/andrew/oecd/crs/processed/2014-01-05/sector_152.pkl"
+DATA_FILE = "/home/andrew/oecd/crs/processed/2014-01-05/filtered.pkl"
 
 # "singleton" cached instance, for now
 # eventually I expect to do proper PyTables or database queries

@@ -10,6 +10,9 @@ Come up with some sort of canonical row id
  - could maybe build an ID out of other columns
    - and just excluding based on project id shouldn't do too much harm?
 
+Figure out how to keep row exclusions from breaking if data under them changes
+  - new filtering may cause those rows to not exist anymore, which should be fine...
+
 Look at using PyTables/HDF5 to store data
  - may be necessary due to large data size if we end up hosting on a modest (i.e. affordable) Amazon instance
  - turns out this doesn't work as PyTables can't handle variable-length strings
