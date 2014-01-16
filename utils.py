@@ -116,6 +116,13 @@ def apply_purpose_code_filter(dataframe):
     return dataframe[dataframe.purposecode.apply(is_desired_purpose_code)]
 
 
+def apply_country_filter(dataframe):
+    # TODO remove this filter once we have more data compression in place
+    desired_countries = ('Cambodia', 'Peru', 'Sierra Leone')
+
+    return dataframe[dataframe.recipientname.apply(lambda x: x in desired_countries)]
+
+
 def remove_unnecessary_columns(dataframe):
     del dataframe['environment']
     del dataframe['pdgg']
@@ -128,6 +135,7 @@ def remove_unnecessary_columns(dataframe):
 def filter_master_file(input_path, output_path):
     master = pd.read_pickle(input_path)
     filtered = apply_purpose_code_filter(master)
+    filtered = apply_country_filter(filtered)
     remove_unnecessary_columns(filtered)
 
     filtered.to_pickle(output_path)
