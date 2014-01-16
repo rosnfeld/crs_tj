@@ -7,6 +7,15 @@
 <form action="{% url 'combo_post' %}" method="post">
     {% csrf_token %}
     <label>Query combination name: <input type="text" name="combo_name"/></label>
+    <div>
+        <label>Included Queries:
+            <select multiple="multiple" name="query_ids">
+                {% for query in possible_queries %}
+                    <option value="{{ query.id }}">{{ query.text }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
     <input type="submit" value="Submit"/>
 </form>
 <a href="{% url 'combos_home' %}">Query Combinations</a>

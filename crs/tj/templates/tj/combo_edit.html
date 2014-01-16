@@ -4,6 +4,21 @@
 </head>
 <body>
 {{ combo.name }}
+    <div>
+        <label>Included Queries:
+            <select multiple="multiple" name="query_ids">
+                {% for query in possible_queries %}
+                    <option value="{{ query.id }}"
+                            {% if query in combo.queries.all %}
+                            selected
+                            {% endif %}
+                            >
+                        {{ query.text }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
 <p>
     <a href="{% url 'combos_home' %}">Query Combinations</a>
 </p>

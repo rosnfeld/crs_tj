@@ -83,24 +83,34 @@ def query_run_json(request, query_id):
 
 
 def combo_create(request):
-    return render(request, 'tj/combo_create.html')
+    possible_queries = Query.objects.all()
+    return render(request, 'tj/combo_create.html', {'possible_queries': possible_queries})
 
 
 def combo_post(request):
     try:
         combo_name = request.POST['combo_name']
+        query_ids = [int(id) for id in request.POST.getlist('query_ids')]
     except KeyError:
         return render(request, 'tj/combo_create.html', {'error_message': 'Bad form data'})
 
     if not combo_name:
         return render(request, 'tj/combo_create.html', {'error_message': 'No name entered'})
 
+    if not query_ids:
+        return render(request, 'tj/combo_create.html', {'error_message': 'No query ids entered'})
+
     combo = QueryCombination(name=combo_name)
     combo.save()
+
+    # not sure if this is the idiomatic way of doing this, but it works
+    for query_id in query_ids:
+        combo.queries.add(query_id)
 
     return HttpResponseRedirect(reverse('combo_edit', args=(combo.id,)))
 
 
 def combo_edit(request, combo_id):
     combo = get_object_or_404(QueryCombination, pk=combo_id)
-    return render(request, 'tj/combo_edit.html', {'combo': combo})
+    possible_queries = Query.objects.all()
+    return render(request, 'tj/combo_edit.html', {'combo': combo, 'possible_queries': possible_queries})
