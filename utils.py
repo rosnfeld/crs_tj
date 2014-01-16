@@ -3,9 +3,9 @@ import os
 import zipfile
 import pandas as pd
 
-
 DELIMITER = '|'
 NUM_COLUMNS = 80
+MASTER_PICKLE_FILE_NAME = 'all_data.pkl'
 
 
 def strip_additional_byte_order_marks(unicode_contents):
@@ -91,11 +91,51 @@ def build_master_file(processed_dir):
     crs_dataframes = [pd.read_csv(psv_path, delimiter=DELIMITER, low_memory=False) for psv_path in psv_paths]
     master_frame = pd.concat(crs_dataframes, ignore_index=True)
 
-    output_path = os.path.join(processed_dir, 'all_data.pkl')
+    output_path = os.path.join(processed_dir, MASTER_PICKLE_FILE_NAME)
     master_frame.to_pickle(output_path)
     print "Wrote", output_path
 
 
+def apply_purpose_code_filter(dataframe):
+    desired_purpose_code_prefixes =\
+        (11,  # Education
+         15,  # Government/CivilSociety
+         16,  # Other Social Infrastructure and Services
+         22,  # Communications
+         43,  # Other Multisector
+         72,  # Emergency Response
+         73,  # Reconstruction Relief and Rehabilitation
+         74,  # Disaster Prevention and Preparedness
+         99  # Unallocated
+    )
+
+    def is_desired_purpose_code(purpose_code):
+        purpose_code_prefix = purpose_code/1000
+        return purpose_code_prefix in desired_purpose_code_prefixes
+
+    return dataframe[dataframe.purposecode.apply(is_desired_purpose_code)]
+
+
+def remove_unnecessary_columns(dataframe):
+    del dataframe['environment']
+    del dataframe['pdgg']
+    del dataframe['biodiversity']
+    del dataframe['climateMitigation']
+    del dataframe['climateAdaptation']
+    del dataframe['desertification']
+
+
+def filter_master_file(input_path, output_path):
+    master = pd.read_pickle(input_path)
+    filtered = apply_purpose_code_filter(master)
+    remove_unnecessary_columns(filtered)
+
+    filtered.to_pickle(output_path)
+    print "Wrote", output_path
+
+
 if __name__ == "__main__":
-    convert_directory('/home/andrew/oecd/crs/downloads/2014-01-10/', '/home/andrew/oecd/crs/processed/2014-01-10/')
-    build_master_file('/home/andrew/oecd/crs/processed/2014-01-10/')
+    # convert_directory('/home/andrew/oecd/crs/downloads/2014-01-10/', '/home/andrew/oecd/crs/processed/2014-01-10/')
+    # build_master_file('/home/andrew/oecd/crs/processed/2014-01-10/')
+    filter_master_file('/home/andrew/oecd/crs/processed/2014-01-05/' + MASTER_PICKLE_FILE_NAME,
+                       '/home/andrew/oecd/crs/processed/2014-01-05/' + 'filtered.pkl')
