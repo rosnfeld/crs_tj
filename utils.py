@@ -130,6 +130,22 @@ def remove_unnecessary_columns(dataframe):
     del dataframe['climateMitigation']
     del dataframe['climateAdaptation']
     del dataframe['desertification']
+    del dataframe['investmentproject']
+    del dataframe['assocfinance']
+    del dataframe['commitmentdate']
+    del dataframe['typerepayment']
+    del dataframe['numberrepayment']
+    del dataframe['interest1']
+    del dataframe['interest2']
+    del dataframe['repaydate1']
+    del dataframe['repaydate2']
+    del dataframe['grantelement']
+    del dataframe['usd_interest']
+    del dataframe['usd_outstanding']
+    del dataframe['usd_arrears_principal']
+    del dataframe['usd_arrears_interest']
+    del dataframe['usd_future_DS_principal']
+    del dataframe['usd_future_DS_interest']
 
 
 def filter_master_file(input_path, output_path):
