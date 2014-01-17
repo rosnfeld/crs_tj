@@ -31,9 +31,15 @@ def get_matching_rows_for_query(query):
 
 
 def get_matching_rows_for_combo(combo):
-    text_list = [query.text for query in combo.queries.all()]
-    results = [find_rows_matching_query_text(text) for text in text_list]
-    rows = pd.concat(results).drop_duplicates()
+    results = [get_matching_rows_for_query(query) for query in combo.queries.all()]
+
+    rows = pd.concat(results)
+
+    # don't worry about excluded rows, we'll apply those manually,
+    # but remove the column so as not to interfere with drop_duplicates
+    del rows["excluded"]
+
+    rows = rows.drop_duplicates()
 
     # if excluded in one query, row is excluded from the combination
     rows['excluded'] = False
