@@ -94,6 +94,12 @@ def query_export_csv(request, query_id):
     return response
 
 
+def query_delete(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+    query.delete()
+    return HttpResponseRedirect(reverse('queries_home'))
+
+
 def combo_create(request):
     possible_queries = Query.objects.all()
     return render(request, 'tj/combo_create.html', {'possible_queries': possible_queries})
@@ -174,3 +180,9 @@ def combo_export_csv(request, combo_id):
     response['Content-Disposition'] = 'attachment; filename="%s.csv"' % combo.name
 
     return response
+
+
+def combo_delete(request, combo_id):
+    combo = get_object_or_404(QueryCombination, pk=combo_id)
+    combo.delete()
+    return HttpResponseRedirect(reverse('combos_home'))

@@ -8,7 +8,11 @@
 {% if combos %}
     <ul>
     {% for combo in combos %}
-        <li><a href="{% url 'combo_edit' combo.id %}">{{ combo.name }}</a></li>
+        <li>
+            <a href="{% url 'combo_edit' combo.id %}">{{ combo.name }}</a>
+            <a href="{% url 'combo_delete' combo.id %}"
+               onclick="return confirm('Delete {{ combo.name }}?');">x</a>
+        </li>
     {% endfor %}
     </ul>
 {% else %}

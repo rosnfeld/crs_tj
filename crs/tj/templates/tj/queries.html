@@ -8,7 +8,11 @@
 {% if queries %}
     <ul>
     {% for query in queries %}
-        <li><a href="{% url 'query_edit' query.id %}">{{ query.text }}</a></li>
+        <li>
+            <a href="{% url 'query_edit' query.id %}">{{ query.text }}</a>
+            <a href="{% url 'query_delete' query.id %}"
+               onclick="return confirm('Delete {{ query.text }}?');">x</a>
+        </li>
     {% endfor %}
     </ul>
 {% else %}
