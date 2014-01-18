@@ -33,6 +33,9 @@ def get_matching_rows_for_query(query):
 def get_matching_rows_for_combo(combo):
     results = [get_matching_rows_for_query(query) for query in combo.queries.all()]
 
+    if not results:
+        return pd.DataFrame()
+
     rows = pd.concat(results)
 
     # don't worry about excluded rows, we'll apply those manually,
