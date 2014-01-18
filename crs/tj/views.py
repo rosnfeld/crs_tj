@@ -21,23 +21,10 @@ def combos_home(request):
 
 
 def query_create(request):
-    return render(request, 'tj/query_create.html')
-
-
-def query_post(request):
-    try:
-        query_text = request.POST['query_text']
-    except KeyError:
-        return render(request, 'tj/query_create.html', {'error_message': 'Bad form data'})
-
-    if not query_text:
-        return render(request, 'tj/query_create.html', {'error_message': 'No text entered'})
-
-    query = Query(text=query_text)
+    # TODO enforce POST?
+    query = Query(text='new query')
     query.save()
 
-    # Always return an HttpResponseRedirect after successfully dealing with POST data.
-    # This prevents data from being posted twice if a user hits the Back button.
     return HttpResponseRedirect(reverse('query_edit', args=(query.id,)))
 
 
@@ -101,29 +88,9 @@ def query_delete(request, query_id):
 
 
 def combo_create(request):
-    possible_queries = Query.objects.all()
-    return render(request, 'tj/combo_create.html', {'possible_queries': possible_queries})
-
-
-def combo_post(request):
-    try:
-        combo_name = request.POST['combo_name']
-        query_ids = [int(id) for id in request.POST.getlist('query_ids')]
-    except KeyError:
-        return render(request, 'tj/combo_create.html', {'error_message': 'Bad form data'})
-
-    if not combo_name:
-        return render(request, 'tj/combo_create.html', {'error_message': 'No name entered'})
-
-    if not query_ids:
-        return render(request, 'tj/combo_create.html', {'error_message': 'No query ids entered'})
-
-    combo = QueryCombination(name=combo_name)
+    # TODO enforce POST?
+    combo = QueryCombination(name='Unnamed Query Combination')
     combo.save()
-
-    # not sure if this is the idiomatic way of doing this, but it works
-    for query_id in query_ids:
-        combo.queries.add(query_id)
 
     return HttpResponseRedirect(reverse('combo_edit', args=(combo.id,)))
 
