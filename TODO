@@ -1,9 +1,3 @@
-<perhaps I could be filing some of these as "issues" in GitHub?>
-
-Use template snippets or custom tags to remove duplication in various views
- - standard "breadcrumb" type navigation at top
- - some of the duplication in table views
-
 Come up with some sort of canonical row id
  - if data keeps updating, pandas row ids aren't exactly stable
  - it's somewhat crazy that crsid is not unique
@@ -11,16 +5,8 @@ Come up with some sort of canonical row id
  - could maybe build an ID out of other columns
    - and just excluding based on project id shouldn't do too much harm?
 
-Figure out how to keep row exclusions from breaking if data under them changes
-  - new filtering may cause those rows to not exist anymore, which should be fine...
-
 Look at SQL/NoSQL databases with some sort of *indexing*
  - not sure what will have best performance
-
-Add ability to delete queries?
-- well, that's always in the admin interface if necessary
-
-Figure out a way to collapse duplication between create/edit
 
 Formalize the setup process
  - script that downloads the files via wget/curl/etc
