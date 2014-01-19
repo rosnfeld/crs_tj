@@ -25,7 +25,8 @@ def get_matching_rows_for_query(query):
     rows = find_rows_matching_query_text(query.text)
     rows['excluded'] = False
     for manual_exclusion in query.manualexclusion_set.all():
-        rows['excluded'][manual_exclusion.pandas_row_id] = True
+        if manual_exclusion.pandas_row_id in rows.index:
+            rows['excluded'][manual_exclusion.pandas_row_id] = True
 
     return rows
 
