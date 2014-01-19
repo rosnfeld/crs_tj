@@ -141,12 +141,16 @@
         <li><a href="{% url 'queries_home' %}">Queries</a></li>
         <li class="active">Query Edit</li>
     </ol>
-    <div>
-    <label>Query text: <input type="text" id="query_text" value="{{ query.text }}"/></label>
-    <input type="button" value="Update Query" onclick="updateQuery()"/>
-    <input type="button" value="Export CSV" onclick="window.open('{% url 'query_export_csv' query.id %}')"/>
-</div>
-<div>
+    <div class="form-group">
+        <label for="query_text">Query text</label>
+        <input type="text" id="query_text" value="{{ query.text }}" class="form-control"/>
+    </div>
+    <button class="btn btn-default" onclick="updateQuery()">
+        Update Query
+    </button>
+    <button class="btn btn-default" onclick="window.open('{% url 'query_export_csv' query.id %}')">
+        Export CSV
+    </button>
     <table id="results_table" class="table">
         <thead>
             <tr>
@@ -168,7 +172,6 @@
             <tr><td>Running query...</td></tr>
         </tbody>
     </table>
-</div>
 </div>
 </body>
 </html>

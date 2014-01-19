@@ -102,27 +102,30 @@
         <li><a href="{% url 'combos_home' %}">Query Combinations</a></li>
         <li class="active">Query Combination Edit</li>
     </ol>
-    <label>Query combination name: <input type="text" id="combo_name" value="{{ combo.name }}"/></label>
-    <div>
-        <label>Included Queries:
-            <select multiple="multiple" id="query_ids">
-                {% for query in possible_queries %}
-                    <option value="{{ query.id }}"
-                            {% if query in combo.queries.all %}
-                            selected
-                            {% endif %}
-                            >
-                        {{ query.text }}
-                    </option>
-                {% endfor %}
-            </select>
-        </label>
+    <div class="form-group">
+        <label for="combo_name">Query combination name</label>
+        <input type="text" id="combo_name" value="{{ combo.name }}" class="form-control"/>
     </div>
-<div>
-    <input type="button" value="Update Query Combination" onclick="updateCombo()"/>
-    <input type="button" value="Export CSV" onclick="window.open('{% url 'combo_export_csv' combo.id %}')"/>
-</div>
-<div>
+    <div class="form-group">
+        <label for="query_ids">Included Queries</label>
+        <select multiple="multiple" id="query_ids" class="form-control">
+            {% for query in possible_queries %}
+                <option value="{{ query.id }}"
+                        {% if query in combo.queries.all %}
+                        selected
+                        {% endif %}
+                        >
+                    {{ query.text }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button class="btn btn-default" onclick="updateCombo()">
+        Update Query Combination
+    </button>
+    <button class="btn btn-default" onclick="window.open('{% url 'combo_export_csv' combo.id %}')">
+        Export CSV
+    </button>
     <table id="results_table" class="table">
         <thead>
             <tr>
@@ -143,7 +146,6 @@
             <tr><td>Running queries...</td></tr>
         </tbody>
     </table>
-</div>
 </div>
 </body>
 </html>
