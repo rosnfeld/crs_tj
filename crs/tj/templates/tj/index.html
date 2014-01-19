@@ -2,15 +2,21 @@
 <html>
 <head>
     <title>OECD CRS Data on Transitional Justice</title>
+    {% include 'tj/header_includes.html' %}
 </head>
-
 <body>
-<p>
-    <a href="{% url 'queries_home' %}">Queries</a>
-</p>
-
-<p>
-    <a href="{% url 'combos_home' %}">Query Combinations</a>
-</p>
+<div class="container">
+    <div class="page-header">
+        <h3>CRS Data on Transitional Justice</h3>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{% url 'queries_home' %}">Queries</a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'combos_home' %}">Query Combinations</a>
+        </div>
+    </div>
+</div>
 </body>
 </html>

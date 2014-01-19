@@ -2,8 +2,7 @@
 <html>
 <head>
     <title>Edit Query</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
-    </script>
+    {% include 'tj/header_includes.html' %}
     <script>
         var manual_exclusions = {};
 
@@ -136,19 +135,19 @@
     </script>
 </head>
 <body>
-<div>
+<div class="container">
+    <ol class="breadcrumb">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'queries_home' %}">Queries</a></li>
+        <li class="active">Query Edit</li>
+    </ol>
+    <div>
     <label>Query text: <input type="text" id="query_text" value="{{ query.text }}"/></label>
     <input type="button" value="Update Query" onclick="updateQuery()"/>
     <input type="button" value="Export CSV" onclick="window.open('{% url 'query_export_csv' query.id %}')"/>
 </div>
-<p>
-    <a href="{% url 'queries_home' %}">Queries Home</a>
-</p>
-<p>
-    <a href="{% url 'home' %}">Home</a>
-</p>
 <div>
-    <table id="results_table" border="1">
+    <table id="results_table" class="table">
         <thead>
             <tr>
                 <th>Include</th>
@@ -157,7 +156,7 @@
                 <th>Donor</th>
                 <th>Agency</th>
                 <th>Recipient</th>
-                <th>USD Disbursed (millions of 2012 dollars)</th>
+                <th>USD Disbursed (millions of 2011 dollars)</th>
                 <th>Sector</th>
                 <th>Project Number</th>
                 <th>Project Title</th>
@@ -169,6 +168,7 @@
             <tr><td>Running query...</td></tr>
         </tbody>
     </table>
+</div>
 </div>
 </body>
 </html>

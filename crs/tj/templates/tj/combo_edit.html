@@ -2,8 +2,7 @@
 <html>
 <head>
     <title>Edit Query Combination</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.js">
-    </script>
+    {% include 'tj/header_includes.html' %}
     <script>
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
@@ -97,6 +96,12 @@
     </script>
 </head>
 <body>
+<div class="container">
+    <ol class="breadcrumb">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'combos_home' %}">Query Combinations</a></li>
+        <li class="active">Query Combination Edit</li>
+    </ol>
     <label>Query combination name: <input type="text" id="combo_name" value="{{ combo.name }}"/></label>
     <div>
         <label>Included Queries:
@@ -117,14 +122,8 @@
     <input type="button" value="Update Query Combination" onclick="updateCombo()"/>
     <input type="button" value="Export CSV" onclick="window.open('{% url 'combo_export_csv' combo.id %}')"/>
 </div>
-<p>
-    <a href="{% url 'combos_home' %}">Query Combinations</a>
-</p>
-<p>
-    <a href="{% url 'home' %}">Home</a>
-</p>
 <div>
-    <table id="results_table" border="1">
+    <table id="results_table" class="table">
         <thead>
             <tr>
                 <th>CRS ID</th>
@@ -132,7 +131,7 @@
                 <th>Donor</th>
                 <th>Agency</th>
                 <th>Recipient</th>
-                <th>USD Disbursed (millions of 2012 dollars)</th>
+                <th>USD Disbursed (millions of 2011 dollars)</th>
                 <th>Sector</th>
                 <th>Project Number</th>
                 <th>Project Title</th>
@@ -144,6 +143,7 @@
             <tr><td>Running queries...</td></tr>
         </tbody>
     </table>
+</div>
 </div>
 </body>
 </html>
