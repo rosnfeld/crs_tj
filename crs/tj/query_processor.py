@@ -1,5 +1,6 @@
 import pandas as pd
 import StringIO
+import collections
 
 # HACK just to get this up and running
 DATA_FILE = "/home/andrew/oecd/crs/processed/2014-01-05/filtered.pkl"
@@ -9,7 +10,29 @@ DATA_FILE = "/home/andrew/oecd/crs/processed/2014-01-05/filtered.pkl"
 FRAME = pd.read_pickle(DATA_FILE)
 
 
-def find_rows_matching_query_text(text):
+def find_rows_matching_code_filters(source_rows, code_filters):
+    rows = source_rows
+
+    # group codes by filter type
+    codes_per_filter_type = collections.defaultdict(list)
+    for code_filter in code_filters:
+        codes_per_filter_type[code_filter.filter_type].append(code_filter.code)
+
+    # do an OR across all filters of a given filtertype, and then an AND across filter types
+    for filter_type, codes in codes_per_filter_type.iteritems():
+        column = filter_type + 'code'
+        boolean_mask = pd.Series(False, index=rows.index)
+
+        for code in codes:
+            boolean_mask |= (rows[column] == code)
+
+        # AND is implicit here... we reset rows to the result of the previous filtertype
+        rows = rows[boolean_mask]
+
+    return rows
+
+
+def find_rows_matching_query_text(source_rows, text):
     # not exactly sure why the decode is necessary, but we get a UnicodeDecodeError otherwise
     row_filter = lambda x: isinstance(x, basestring) and text in x.decode('utf-8').lower()
 
@@ -17,12 +40,19 @@ def find_rows_matching_query_text(text):
     matching_shortdescription = FRAME.shortdescription.apply(row_filter)
     matching_longdescription = FRAME.longdescription.apply(row_filter)
 
-    return FRAME[matching_projecttitle | matching_shortdescription | matching_longdescription]
+    return source_rows[matching_projecttitle | matching_shortdescription | matching_longdescription]
 
 
 def get_matching_rows_for_query(query):
-    # eventually process other query components beyond just text
-    rows = find_rows_matching_query_text(query.text)
+    rows = FRAME
+
+    # first, reduce data size as much as possible using filters
+    rows = find_rows_matching_code_filters(rows, query.codefilter_set.all())
+
+    # then do the somewhat expensive operation of text search
+    rows = find_rows_matching_query_text(rows, query.text)
+
+    # mark manual exclusions
     rows['excluded'] = False
     for manual_exclusion in query.manualexclusion_set.all():
         if manual_exclusion.pandas_row_id in rows.index:

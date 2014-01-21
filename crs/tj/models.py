@@ -3,8 +3,7 @@ from django.db import models
 
 class Query(models.Model):
     """
-    Currently just models some search text we want persisted.
-    Will be fleshed out with more fields in due course.
+    Models various search criteria
     """
     text = models.CharField(max_length=64)
 
@@ -21,6 +20,24 @@ class ManualExclusion(models.Model):
 
     def __unicode__(self):
         return unicode(self.pandas_row_id)
+
+
+# would be nice to have a proper enum in a static "code table",
+# but I think this is the django way of doing things
+CODE_FILTER_TYPES = ['recipient', 'donor', 'agency', 'purpose', 'sector', 'channel']
+CODE_FILTER_CHOICES = tuple((x, x) for x in CODE_FILTER_TYPES)
+
+
+class CodeFilter(models.Model):
+    """
+    Models a given {donor,recipient,sector,...} code that could be required by a Query
+    """
+    filter_type = models.CharField(max_length=16, choices=CODE_FILTER_CHOICES)
+    code = models.PositiveIntegerField()
+    query = models.ForeignKey(Query)
+
+    def __unicode__(self):
+        return unicode(self.filter_type) + u'_' + unicode(self.code)
 
 
 class QueryCombination(models.Model):
