@@ -118,7 +118,7 @@ def apply_purpose_code_filter(dataframe):
 
 def apply_country_filter(dataframe):
     # TODO remove this filter once we have more data compression in place
-    desired_countries = ('Cambodia', 'Peru', 'Sierra Leone')
+    desired_countries = ('Cambodia', 'Peru', 'Sierra Leone', 'Guatemala', 'Kenya')
 
     return dataframe[dataframe.recipientname.apply(lambda x: x in desired_countries)]
 
