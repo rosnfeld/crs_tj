@@ -30,7 +30,9 @@ def query_create(request):
 
 def query_edit(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
-    return render(request, 'tj/query_edit.html', {'query': query})
+    # TODO would like to filter by year here also but it doesn't fit the pattern
+    filter_types = ['recipient', 'donor', 'agency', 'purpose', 'sector', 'channel']
+    return render(request, 'tj/query_edit.html', {'query': query, 'filter_types': filter_types})
 
 
 def query_update(request, query_id):
@@ -153,3 +155,8 @@ def combo_delete(request, combo_id):
     combo = get_object_or_404(QueryCombination, pk=combo_id)
     combo.delete()
     return HttpResponseRedirect(reverse('combos_home'))
+
+
+def filter_box(request, filter_type):
+    filter_rows = query_processor.get_all_name_code_pairs(filter_type)
+    return render(request, 'tj/filter_box.html', {'filter_type': filter_type, 'filter_rows': filter_rows})

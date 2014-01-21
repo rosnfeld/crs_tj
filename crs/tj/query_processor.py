@@ -67,3 +67,18 @@ def convert_to_csv_string_for_export(dataframe):
     dataframe.to_csv(stringio, index=False)
 
     return stringio.getvalue()
+
+
+def get_all_name_code_pairs(prefix):
+    """
+    Returns a dataframe containing ___code/___name pairs.
+    This method makes a minor argument for separating this data out at the processing step.
+    """
+    code_column = prefix + 'code'
+    name_column = prefix + 'name'
+
+    rows = FRAME[[code_column, name_column]].drop_duplicates()
+
+    rows = rows.sort(name_column)
+
+    return rows.rename(columns={code_column: 'code', name_column: 'name'})

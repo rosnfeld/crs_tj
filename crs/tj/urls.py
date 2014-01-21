@@ -12,6 +12,7 @@ urlpatterns = patterns('',
     url(r'^query/(?P<query_id>\d+)/run_json', views.query_run_json, name='query_run_json'),
     url(r'^query/(?P<query_id>\d+)/export_csv', views.query_export_csv, name='query_export_csv'),
     url(r'^query/(?P<query_id>\d+)/delete', views.query_delete, name='query_delete'),
+    url(r'^query/filter_box/(?P<filter_type>\w+)', views.filter_box, name='filter_box'),
 
     url(r'^combo/?$', views.combos_home, name='combos_home'),
     url(r'^combo/create$', views.combo_create, name='combo_create'),

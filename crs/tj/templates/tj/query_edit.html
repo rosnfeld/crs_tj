@@ -44,11 +44,6 @@
             $.ajax({
                 url: "{% url 'query_run_json' query.id %}",
 
-                // data to send (will be converted to a query string)
-                data: {
-                    id: {{ query.id }}
-                },
-
                 type: "GET",
 
                 // type of data we expect back
@@ -131,6 +126,24 @@
             });
         }
 
+        function addFilter(filter_type) {
+            $.ajax({
+                url: "/tj/query/filter_box/" + filter_type, // unfortunate to not be able to use url tag
+
+                type: "GET",
+
+                success: function (html) {
+                    $("#modal_holder").html(html);
+                    $("#modal_filter").modal()
+                },
+
+                error: function (xhr, status) {
+                    alert("Failed to add filter");
+                }
+            });
+        }
+
+
         $(document).ready(refreshTable);
     </script>
 </head>
@@ -145,12 +158,29 @@
         <label for="query_text">Query text</label>
         <input type="text" id="query_text" value="{{ query.text }}" class="form-control"/>
     </div>
-    <button class="btn btn-default" onclick="updateQuery()">
-        Update Query
-    </button>
-    <button class="btn btn-default" onclick="window.open('{% url 'query_export_csv' query.id %}')">
-        Export CSV
-    </button>
+    <div class="row">
+        <div class="btn-group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                Add Filter <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                {% for filter_type in filter_types %}
+                <li><a onclick="addFilter('{{ filter_type }}')">{{ filter_type|title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <br/>
+    </div>
+    <div class="row">
+        <button class="btn btn-default" onclick="updateQuery()">
+            Update Query
+        </button>
+        <button class="btn btn-default" onclick="window.open('{% url 'query_export_csv' query.id %}')">
+            Export CSV
+        </button>
+    </div>
     <table id="results_table" class="table">
         <thead>
             <tr>
@@ -173,5 +203,6 @@
         </tbody>
     </table>
 </div>
+<div id="modal_holder"></div>
 </body>
 </html>
