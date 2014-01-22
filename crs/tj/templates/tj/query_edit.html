@@ -3,6 +3,18 @@
 <head>
     <title>Edit Query</title>
     {% include 'tj/header_includes.html' %}
+    {% load staticfiles %}
+    <script src="{% static 'tj/filter_manager.js' %}"></script>
+    <script>
+        // TODO extract this setup to some sort of other header/template, packaged with the script include?
+        var get_filters_url = '{% url 'query_get_filters_json' query.id %}';
+        var filter_update_url_map = {};
+        {% for filter_type in code_filter_types %}
+        filter_update_url_map['{{ filter_type }}'] = '{% url 'query_filter_update' query.id filter_type %}';
+        {% endfor %}
+        setFilterUrls(get_filters_url, filter_update_url_map);
+    </script>
+
     <script>
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
@@ -21,8 +33,14 @@
             var row = document.getElementById('r_' + pandas_row_id);
             var checkbox = document.getElementById('c_' + pandas_row_id);
 
+            if (row == null) {
+                return; // perhaps filtered away
+            }
+
             // use strikethrough to indicate excluded rows
             // maybe "faded" (low alpha) style would look nicer?
+            // TODO maybe change this to be a CSS class you add/remove?
+            // that would let you make styling decisions a bit more cleanly
             if (is_excluded) {
                 row.style.textDecoration = 'line-through';
             } else {
@@ -34,7 +52,7 @@
 
         function refreshExclusions() {
             $.ajax({
-                url: "{% url 'query_get_exclusions' query.id %}",
+                url: "{% url 'query_get_exclusions_json' query.id %}",
 
                 type: "GET",
 
@@ -133,9 +151,9 @@
         }
 
 
-        function editFilter(filter_type) {
+        function editFilter(filter_box_url) {
             $.ajax({
-                url: "/tj/query/filter_box/" + filter_type, // unfortunate to not be able to use url tag
+                url: filter_box_url,
 
                 type: "GET",
 
@@ -150,9 +168,23 @@
             });
         }
 
+        function style_filter_dropdowns() {
+            var filter_types = getFilterTypes();
+            for (var i = 0; i < filter_types.length; i++) {
+                var filter_type = filter_types[i];
+                var filter_jquery_object = $('#fb_' + filter_type);
+                if (isFilterActive(filter_type)) {
+                    filter_jquery_object.addClass('filter_active');
+                } else {
+                    filter_jquery_object.removeClass('filter_active');
+                }
+            }
+        }
+
         $(document).ready(function() {
             $("#query_text").keyup(query_box_keyup);
             refreshTable();
+            refreshCodeFilters(style_filter_dropdowns);
         });
     </script>
 </head>
@@ -179,7 +211,8 @@
     <div class="row">
        {% for filter_type in code_filter_types %}
         <div class="btn-group">
-            <button type="button" class="btn btn-default dropdown-toggle" onclick="editFilter('{{ filter_type }}')">
+            <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
+                    onclick="editFilter('{% url 'query_filter_edit' query.id filter_type %}')">
                 {{ filter_type|title }} <span class="caret"></span>
             </button>
         </div>

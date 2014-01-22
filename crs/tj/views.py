@@ -52,7 +52,7 @@ def query_update_text(request, query_id):
     return HttpResponse('OK')
 
 
-def query_get_exclusions(request, query_id):
+def query_get_exclusions_json(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
     row_ids = [exclusion.pandas_row_id for exclusion in query.manualexclusion_set.all()]
     return HttpResponse(json.dumps(row_ids), content_type="application/json")
@@ -111,6 +111,45 @@ def query_delete(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
     query.delete()
     return HttpResponseRedirect(reverse('queries_home'))
+
+
+def query_get_filters_json(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+    filter_codes = {}
+
+    for filter_type in CODE_FILTER_TYPES:
+        filter_codes[filter_type] = []
+
+    for code_filter in query.codefilter_set.all():
+        filter_codes[code_filter.filter_type].append(code_filter.code)
+
+    return HttpResponse(json.dumps(filter_codes), content_type="application/json")
+
+
+def query_filter_edit(request, query_id, filter_type):
+    query = get_object_or_404(Query, pk=query_id)
+    filter_rows = query_processor.get_all_name_code_pairs(filter_type)
+
+    return render(request, 'tj/filter_edit.html',
+                  {'query': query, 'filter_type': filter_type, 'filter_rows': filter_rows})
+
+
+def query_filter_update(request, query_id, filter_type):
+    query = get_object_or_404(Query, pk=query_id)
+
+    try:
+        codes = [int(code) for code in request.POST.getlist('codes[]')]
+    except KeyError:
+        return HttpResponseBadRequest('Bad form data')
+
+    existing_filters_of_this_type = query.codefilter_set.all().filter(filter_type__exact=filter_type)
+    for code_filter in existing_filters_of_this_type:
+        code_filter.delete()
+
+    for code in codes:
+        query.codefilter_set.create(filter_type=filter_type, code=code)
+
+    return HttpResponse('OK')
 
 
 def combo_create(request):
@@ -179,8 +218,3 @@ def combo_delete(request, combo_id):
     combo = get_object_or_404(QueryCombination, pk=combo_id)
     combo.delete()
     return HttpResponseRedirect(reverse('combos_home'))
-
-
-def filter_box(request, filter_type):
-    filter_rows = query_processor.get_all_name_code_pairs(filter_type)
-    return render(request, 'tj/filter_box.html', {'filter_type': filter_type, 'filter_rows': filter_rows})
