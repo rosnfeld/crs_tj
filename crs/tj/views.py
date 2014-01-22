@@ -1,9 +1,10 @@
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
-from tj.models import Query, QueryCombination
+from tj.models import Query, QueryCombination, CODE_FILTER_TYPES
 
 import query_processor
+import json
 
 
 def index(request):
@@ -31,18 +32,16 @@ def query_create(request):
 def query_edit(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
     # TODO would like to filter by year here also but it doesn't fit the pattern
-    filter_types = ['recipient', 'donor', 'agency', 'purpose', 'sector', 'channel']
-    return render(request, 'tj/query_edit.html', {'query': query, 'filter_types': filter_types})
+    return render(request, 'tj/query_edit.html', {'query': query, 'code_filter_types': CODE_FILTER_TYPES})
 
 
-def query_update(request, query_id):
+def query_update_text(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
 
     try:
         query_text = request.POST['query_text']
-        manual_exclusion_ids = [int(id) for id in request.POST.getlist('manual_exclusion_ids[]')]
     except KeyError:
-        return HttpResponseBadRequest('Bad form data')  # could be JSON?
+        return HttpResponseBadRequest('Bad form data')
 
     if not query_text:
         return HttpResponseBadRequest('No text entered')
@@ -50,25 +49,50 @@ def query_update(request, query_id):
     query.text = query_text
     query.save()
 
-    # slightly inefficient, but easiest is to just wipe the existing exclusions and start fresh
-    existing_exclusions = query.manualexclusion_set.all()
-    for exclusion in existing_exclusions:
-        exclusion.delete()
-
-    for manual_exclusion_id in manual_exclusion_ids:
-        query.manualexclusion_set.create(pandas_row_id=manual_exclusion_id)
-
-    return HttpResponseRedirect(reverse('query_edit', args=(query.id,)))
+    return HttpResponse('OK')
 
 
-def query_run_json(request, query_id):
+def query_get_exclusions(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+    row_ids = [exclusion.pandas_row_id for exclusion in query.manualexclusion_set.all()]
+    return HttpResponse(json.dumps(row_ids), content_type="application/json")
+
+
+def query_add_exclusion(request, query_id):
     query = get_object_or_404(Query, pk=query_id)
 
-    dataframe = query_processor.get_matching_rows_for_query(query)
+    try:
+        row_id = int(request.POST['row_id'])
+    except KeyError:
+        return HttpResponseBadRequest('Bad form data')
 
-    json_text = dataframe.to_json(orient='index')
+    query.manualexclusion_set.create(pandas_row_id=row_id)
 
-    return HttpResponse(json_text, content_type="application/json")
+    return HttpResponse('OK')
+
+
+def query_remove_exclusion(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+
+    try:
+        row_id = int(request.POST['row_id'])
+    except KeyError:
+        return HttpResponseBadRequest('Bad form data')
+
+    existing_exclusions = query.manualexclusion_set.all()
+    for exclusion in existing_exclusions:
+        if exclusion.pandas_row_id == row_id:
+            exclusion.delete()
+
+    return HttpResponse('OK')
+
+
+def query_results(request, query_id):
+    query = get_object_or_404(Query, pk=query_id)
+
+    rows = query_processor.get_matching_rows_for_query(query)
+
+    return render(request, 'tj/query_results.html', {'rows': rows})
 
 
 def query_export_csv(request, query_id):

@@ -4,29 +4,6 @@
     <title>Edit Query</title>
     {% include 'tj/header_includes.html' %}
     <script>
-        var manual_exclusions = {};
-
-        function updateRowStyleForManualExclusions(pandas_row_id) {
-            var row = document.getElementById('r_' + pandas_row_id);
-
-            // use strikethrough to indicate excluded rows
-            // maybe "faded" (low alpha) style would look nicer?
-            if (manual_exclusions[pandas_row_id]) {
-                row.style.textDecoration = 'line-through';
-            } else {
-                row.style.textDecoration = 'none';
-            }
-        }
-
-        function handleCheckbox(checkbox) {
-            // this substring bit is admittedly gross
-            // maybe we can do something like just have the id on the row, and do parent/child association
-            var pandas_row_id = checkbox.id.substring(2);
-            manual_exclusions[pandas_row_id] = !checkbox.checked;
-
-            updateRowStyleForManualExclusions(pandas_row_id);
-        }
-
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
             return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -40,54 +17,86 @@
             }
         });
 
-        function refreshTable() {
+        function updateRowStyleForManualExclusion(pandas_row_id, is_excluded) {
+            var row = document.getElementById('r_' + pandas_row_id);
+            var checkbox = document.getElementById('c_' + pandas_row_id);
+
+            // use strikethrough to indicate excluded rows
+            // maybe "faded" (low alpha) style would look nicer?
+            if (is_excluded) {
+                row.style.textDecoration = 'line-through';
+            } else {
+                row.style.textDecoration = 'none';
+            }
+
+            checkbox.checked = is_excluded;
+        }
+
+        function refreshExclusions() {
             $.ajax({
-                url: "{% url 'query_run_json' query.id %}",
+                url: "{% url 'query_get_exclusions' query.id %}",
 
                 type: "GET",
 
-                // type of data we expect back
-                dataType: "json",
-
-                // code to run if the request succeeds;
-                // the response is passed to the function
                 success: function (json) {
-                    // refresh manual exclusions from server
-                    manual_exclusions = {};
+                    // set all rows as non-excluded, first
+                    $("[id^=r_]").each( function (index, row) {
+                        var row_id = $(this).attr('id');
+                        var pandas_row_id = row_id.substring(2);
+                        updateRowStyleForManualExclusion(pandas_row_id, false);
+                    });
 
-                    var table_body = "";
-                    $.each(json, function(pandas_row_id, row_map) {
-                        var checked = "checked";
-                        if (this.excluded) {
-                            checked = "";
-                            manual_exclusions[pandas_row_id] = true;
-                        }
+                    // iterate over the exclusions
+                    $.each(json, function(i, pandas_row_id) {
+                        updateRowStyleForManualExclusion(pandas_row_id, true);
+                    });
+                },
 
-                        var tbl_row = "";
-                        tbl_row += "<td><input type='checkbox' id='c_" + pandas_row_id + "' " + checked +
-                                " onclick='handleCheckbox(this)'/> </td>";
+                error: function (xhr, status) {
+                    alert("Failed to refresh manual exclusions");
+                }
+            });
+        }
 
-                        tbl_row += "<td>" + this.crsid + "</td>";
-                        tbl_row += "<td>" + this.Year + "</td>";
-                        tbl_row += "<td>" + this.donorname + "</td>";
-                        tbl_row += "<td>" + this.agencyname + "</td>";
-                        tbl_row += "<td>" + this.recipientname + "</td>";
+        function handleCheckbox(checkbox) {
+            // this substring bit is admittedly gross
+            // maybe we can do something like just have the id on the row, and do parent/child association
+            var pandas_row_id = checkbox.id.substring(2);
 
-                        // could maybe preserve the nan/null here rather than filling in zero
-                        var disbursement = (this.usd_disbursement_defl || 0);
-                        tbl_row += "<td>" + disbursement.toFixed(6) + "</td>";
+            var url;
 
-                        tbl_row += "<td>" + this.sectorname + "</td>";
-                        tbl_row += "<td>" + this.projectnumber + "</td>";
-                        tbl_row += "<td>" + this.projecttitle + "</td>";
-                        tbl_row += "<td>" + this.shortdescription + "</td>";
-                        tbl_row += "<td>" + this.longdescription + "</td>";
+            if (checkbox.checked) {
+                url = "{% url 'query_add_exclusion' query.id %}";
+            } else {
+                url = "{% url 'query_remove_exclusion' query.id %}";
+            }
 
-                        table_body += "<tr id='r_" + pandas_row_id + "'>" + tbl_row + "</tr>";
-                    })
-                    $("#results_table tbody").html(table_body);
+            $.ajax({
+                url: url,
 
-                    $.each(json, function(pandas_row_id, row_map) { updateRowStyleForManualExclusions(pandas_row_id) });
+                data: {
+                    row_id: pandas_row_id
+                },
+
+                type: "POST",
+
+                success: refreshExclusions,
+
+                error: function (xhr, status) {
+                    alert("Failed to handle manual exclusion");
+                }
+            });
+        }
+
+        function refreshTable() {
+            $.ajax({
+                url: "{% url 'query_results' query.id %}",
+
+                type: "GET",
+
+                success: function (html) {
+                    $("#table_holder").html(html);
+                    refreshExclusions();
                 },
 
                 // code to run if the request fails; the raw request and status codes are passed to the function
@@ -97,23 +106,14 @@
             });
         }
 
-        function updateQuery() {
+        function updateQueryText() {
             var query_text = document.getElementById('query_text').value;
 
-            var manual_exclusion_ids = [];
-            for (var pandas_row_id in manual_exclusions) {
-                if (manual_exclusions.hasOwnProperty(pandas_row_id) && manual_exclusions[pandas_row_id]) {
-                    manual_exclusion_ids.push(pandas_row_id);
-                }
-            }
-
             $.ajax({
-                url: "{% url 'query_update' query.id %}",
+                url: "{% url 'query_update_text' query.id %}",
 
-                // could try posting JSON here, but it seems a bit ugly on the server side
                 data: {
-                    query_text: query_text,
-                    manual_exclusion_ids: manual_exclusion_ids
+                    query_text: query_text
                 },
 
                 type: "POST",
@@ -126,7 +126,14 @@
             });
         }
 
-        function addFilter(filter_type) {
+        function query_box_keyup(event) {
+            if (event.which == 13) { // 'Enter' key
+                updateQueryText()
+            }
+        }
+
+
+        function editFilter(filter_type) {
             $.ajax({
                 url: "/tj/query/filter_box/" + filter_type, // unfortunate to not be able to use url tag
 
@@ -138,13 +145,15 @@
                 },
 
                 error: function (xhr, status) {
-                    alert("Failed to add filter");
+                    alert("Failed to edit filter");
                 }
             });
         }
 
-
-        $(document).ready(refreshTable);
+        $(document).ready(function() {
+            $("#query_text").keyup(query_box_keyup);
+            refreshTable();
+        });
     </script>
 </head>
 <body>
@@ -154,55 +163,38 @@
         <li><a href="{% url 'queries_home' %}">Queries</a></li>
         <li class="active">Query Edit</li>
     </ol>
+    <div class="row">
     <div class="form-group">
         <label for="query_text">Query text</label>
-        <input type="text" id="query_text" value="{{ query.text }}" class="form-control"/>
+        <div class="input-group">
+            <input type="text" id="query_text" value="{{ query.text }}" class="form-control"/>
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button" onclick="updateQueryText()">
+                    <span class="glyphicon glyphicon-search"></span>
+                </button>
+            </span>
+        </div>
+    </div>
     </div>
     <div class="row">
+       {% for filter_type in code_filter_types %}
         <div class="btn-group">
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                Add Filter <span class="caret"></span>
+            <button type="button" class="btn btn-default dropdown-toggle" onclick="editFilter('{{ filter_type }}')">
+                {{ filter_type|title }} <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu">
-                {% for filter_type in filter_types %}
-                <li><a onclick="addFilter('{{ filter_type }}')">{{ filter_type|title }}</a></li>
-                {% endfor %}
-            </ul>
         </div>
+        {% endfor %}
     </div>
     <div class="row">
         <br/>
     </div>
     <div class="row">
-        <button class="btn btn-default" onclick="updateQuery()">
-            Update Query
-        </button>
         <button class="btn btn-default" onclick="window.open('{% url 'query_export_csv' query.id %}')">
             Export CSV
         </button>
     </div>
-    <table id="results_table" class="table">
-        <thead>
-            <tr>
-                <th>Include</th>
-                <th>CRS ID</th>
-                <th>Year</th>
-                <th>Donor</th>
-                <th>Agency</th>
-                <th>Recipient</th>
-                <th>USD Disbursed (millions of 2011 dollars)</th>
-                <th>Sector</th>
-                <th>Project Number</th>
-                <th>Project Title</th>
-                <th>Short Description</th>
-                <th>Long Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td>Running query...</td></tr>
-        </tbody>
-    </table>
+    <div id="table_holder"></div>
+    <div id="modal_holder"></div>
 </div>
-<div id="modal_holder"></div>
 </body>
 </html>
