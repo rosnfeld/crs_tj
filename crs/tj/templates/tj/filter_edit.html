@@ -6,22 +6,7 @@
                 <h4 class="modal-title" id="filter_title">Filter by {{ filter_type|title }}</h4>
             </div>
             <div class="modal-body">
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" id="check_all_none">
-                        All/None
-                    </label>
-                    <script>
-                        $('#check_all_none').click(function () {
-                            if ($(this).is(':checked')) {
-                                $('.others').prop("checked", true);
-                            }
-                            else {
-                                $('.others').removeAttr("checked");
-                            }
-                        });
-                    </script>
-                </div>
+                <em>Having nothing selected here is the same as permitting all values.</em>
                 <hr/>
                 <div style="height:500px; overflow:auto">
                     {% for i, row in filter_rows.iterrows %}
@@ -57,11 +42,6 @@
                 var code = checkbox_id.substring(3);
                 codes.push(code);
             });
-
-            if (codes.length == 0) {
-                alert('Need to select at least one value');
-                return;
-            }
 
             $.ajax({
                 url: "{% url 'query_filter_update' query.id filter_type %}",
