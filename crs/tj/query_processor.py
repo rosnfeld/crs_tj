@@ -79,7 +79,8 @@ def get_matching_rows_for_combo(combo):
     rows['excluded'] = False
     for query in combo.queries.all():
         for manual_exclusion in query.manualexclusion_set.all():
-            rows['excluded'][manual_exclusion.pandas_row_id] = True
+            if manual_exclusion.pandas_row_id in rows.index:
+                rows['excluded'][manual_exclusion.pandas_row_id] = True
 
     return rows
 
