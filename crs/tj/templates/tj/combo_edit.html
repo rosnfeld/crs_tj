@@ -41,18 +41,18 @@
                         }
 
                         var tbl_row = "";
-                        tbl_row += "<td>" + this.crsid + "</td>";
                         tbl_row += "<td>" + this.Year + "</td>";
+                        tbl_row += "<td>" + this.recipientname + "</td>";
                         tbl_row += "<td>" + this.donorname + "</td>";
                         tbl_row += "<td>" + this.agencyname + "</td>";
-                        tbl_row += "<td>" + this.recipientname + "</td>";
+                        tbl_row += "<td>" + this.channelname + "</td>";
 
                         // could maybe preserve the nan/null here rather than filling in zero
                         var disbursement = (this.usd_disbursement_defl || 0);
                         tbl_row += "<td>" + disbursement.toFixed(6) + "</td>";
 
                         tbl_row += "<td>" + this.sectorname + "</td>";
-                        tbl_row += "<td>" + this.projectnumber + "</td>";
+                        tbl_row += "<td>" + this.purposename + "</td>";
                         tbl_row += "<td>" + this.projecttitle + "</td>";
                         tbl_row += "<td>" + this.shortdescription + "</td>";
                         tbl_row += "<td>" + this.longdescription + "</td>";
@@ -124,19 +124,19 @@
         Update Query Combination
     </button>
     <button class="btn btn-default" onclick="window.open('{% url 'combo_export_csv' combo.id %}')">
-        Export CSV
+        Export Full Data CSV
     </button>
     <table id="results_table" class="table">
         <thead>
             <tr>
-                <th>CRS ID</th>
                 <th>Year</th>
+                <th>Recipient</th>
                 <th>Donor</th>
                 <th>Agency</th>
-                <th>Recipient</th>
+                <th>Channel</th>
                 <th>USD Disbursed (millions of 2011 dollars)</th>
                 <th>Sector</th>
-                <th>Project Number</th>
+                <th>Purpose</th>
                 <th>Project Title</th>
                 <th>Short Description</th>
                 <th>Long Description</th>
