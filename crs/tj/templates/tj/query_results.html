@@ -2,14 +2,14 @@
     <thead>
         <tr>
             <th>Include</th>
-            <th>CRS ID</th>
             <th>Year</th>
+            <th>Recipient</th>
             <th>Donor</th>
             <th>Agency</th>
-            <th>Recipient</th>
+            <th>Channel</th>
             <th>USD Disbursed (millions of 2011 dollars)</th>
             <th>Sector</th>
-            <th>Project Number</th>
+            <th>Purpose</th>
             <th>Project Title</th>
             <th>Short Description</th>
             <th>Long Description</th>
@@ -19,14 +19,14 @@
         {% for i, row in rows.iterrows %}
             <tr id="r_{{ i }}">
                 <td><input type='checkbox' id='c_{{ i }}' onchange='handleCheckbox(this)'/></td>
-                <td>{{ row.crsid }}</td>
                 <td>{{ row.Year }}</td>
+                <td>{{ row.recipientname }}</td>
                 <td>{{ row.donorname }}</td>
                 <td>{{ row.agencyname }}</td>
-                <td>{{ row.recipientname }}</td>
+                <td>{{ row.channelname }}</td>
                 <td>{{ row.usd_disbursement_defl | floatformat:6 }}</td>
                 <td>{{ row.sectorname }}</td>
-                <td>{{ row.projectnumber }}</td>
+                <td>{{ row.purposename }}</td>
                 <td>{{ row.projecttitle }}</td>
                 <td>{{ row.shortdescription }}</td>
                 <td>{{ row.longdescription }}</td>
