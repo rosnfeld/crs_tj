@@ -1,13 +1,31 @@
 import pandas as pd
 import StringIO
 import collections
+import os
 
-# HACK just to get this up and running
-DATA_FILE = "/home/andrew/oecd/crs/processed/2014-01-05/filtered.pkl"
+import urlparse
+import urllib2
+import boto
+import cPickle as pickle
+
+DATA_PICKLE_URL = os.environ.get('DATA_PICKLE_URL')
+
+# unfortunately pandas code for reading pickle doesn't handle URLs (I should add an issue about that),
+# so have to do some magic here
+
+parsed_url = urlparse.urlparse(DATA_PICKLE_URL)
+if parsed_url.scheme == 's3':
+    connection = boto.connect_s3()
+    bucket = connection.get_bucket(parsed_url.netloc)
+    k = boto.s3.key.Key(bucket)
+    k.key = parsed_url.path
+    buffer = StringIO.StringIO(k.get_contents_as_string())
+else:
+    buffer = urllib2.urlopen(DATA_PICKLE_URL)
 
 # "singleton" cached instance, for now
-# eventually I expect to do proper PyTables or database queries
-FRAME = pd.read_pickle(DATA_FILE)
+# eventually I expect to do proper database queries
+FRAME = pickle.load(buffer)
 
 
 def find_rows_matching_code_filters(source_rows, code_filters):
