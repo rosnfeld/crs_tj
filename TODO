@@ -13,8 +13,3 @@ Formalize the setup process
  - puts them in some sort of versioned directory
  - unzips them, converts to strip redundant BOMs etc
  - concatenates into a master file
-
-Lock down Django
- - toggle debug to false
- - externalize secret key
- - add authentication/login, maybe permissions?
