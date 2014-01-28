@@ -13,3 +13,7 @@ Formalize the setup process
  - puts them in some sort of versioned directory
  - unzips them, converts to strip redundant BOMs etc
  - concatenates into a master file
+
+Split utils into a bunch of more focused files:
+ - downloading/converting raw OECD data
+ - preparing postgres tables
