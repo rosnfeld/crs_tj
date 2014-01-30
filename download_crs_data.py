@@ -1,5 +1,5 @@
 """
-For downloading data from OECD
+For downloading CRS data from OECD
 """
 
 import urllib2
