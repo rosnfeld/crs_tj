@@ -5,9 +5,63 @@ For building PostgreSQL database tables to house CRS data for the web app.
 import psycopg2
 import os
 import pandas as pd
+import StringIO
 
 # somewhat different than what is in models.py
 CODE_TABLES = ['donor', 'agency', 'recipient', 'region', 'incomegroup', 'flow', 'purpose', 'sector', 'channel']
+
+# list of (column name, postgres type) tuples for the columns in the CRS data
+CRS_COLUMN_SPEC = [
+    ('Year', 'integer'),
+    ('donorcode', 'integer'),
+    ('agencycode', 'integer'),
+    ('crsid', 'varchar (63)'),
+    ('projectnumber', 'varchar (63)'),
+    ('initialreport', 'integer'),
+    ('recipientcode', 'integer'),
+    ('regioncode', 'integer'),
+    ('incomegroupcode', 'integer'),
+    ('flowcode', 'integer'),
+    ('bi_multi', 'integer'),
+    ('category', 'integer'),
+    ('finance_t', 'integer'),
+    ('aid_t', 'varchar (63)'),
+    ('usd_commitment', 'double precision'),
+    ('usd_disbursement', 'double precision'),
+    ('usd_received', 'double precision'),
+    ('usd_commitment_defl', 'double precision'),
+    ('usd_disbursement_defl', 'double precision'),
+    ('usd_received_defl', 'double precision'),
+    ('usd_adjustment', 'double precision'),
+    ('usd_adjustment_defl', 'double precision'),
+    ('usd_amountuntied', 'double precision'),
+    ('usd_amountpartialtied', 'double precision'),
+    ('usd_amounttied', 'double precision'),
+    ('usd_amountuntied_defl', 'double precision'),
+    ('usd_amountpartialtied_defl', 'double precision'),
+    ('usd_amounttied_defl', 'double precision'),
+    ('usd_IRTC', 'double precision'),
+    ('usd_expert_commitment', 'double precision'),
+    ('usd_expert_extended', 'double precision'),
+    ('usd_export_credit', 'double precision'),
+    ('currencycode', 'integer'),
+    ('commitment_national', 'double precision'),
+    ('disbursement_national', 'double precision'),
+    ('shortdescription', 'text'),
+    ('projecttitle', 'text'),
+    ('purposecode', 'integer'),
+    ('sectorcode', 'integer'),
+    ('channelcode', 'double precision'),
+    ('channelreportedname', 'text'),
+    ('geography', 'text'),
+    ('expectedstartdate', 'varchar (63)'),
+    ('completiondate', 'varchar (63)'),
+    ('longdescription', 'text'),
+    ('gender', 'double precision'),
+    ('trade', 'double precision'),
+    ('FTC', 'double precision'),
+    ('PBA', 'double precision')
+]
 
 
 def get_db_connection(host, database, user, password):
@@ -44,8 +98,8 @@ def build_code_tables(cursor, dataframe):
         name_column = filter_type + 'name'
 
         # create table and populate it
-        create_sql_template = 'CREATE TABLE {table_name} ({code_column} integer, {name_column} varchar(127));'
-        create_sql = create_sql_template.format(table_name=table_name, code_column=code_column, name_column=name_column)
+        create_template = 'CREATE TABLE {table_name} ({code_column} integer primary key, {name_column} varchar(127));'
+        create_sql = create_template.format(table_name=table_name, code_column=code_column, name_column=name_column)
 
         cursor.execute(create_sql)
 
@@ -55,57 +109,19 @@ def build_code_tables(cursor, dataframe):
 
 
 def create_crs_table(cursor):
-    sql = '''CREATE TABLE crs (
-        year integer,
-        donorcode integer,
-        agencycode integer,
-        crsid varchar (63),
-        projectnumber varchar (63),
-        initialreport integer,
-        recipientcode integer,
-        regioncode integer,
-        incomegroupcode integer,
-        flowcode integer,
-        bi_multi integer,
-        category integer,
-        finance_t integer,
-        aid_t varchar (63),
-        usd_commitment double precision,
-        usd_disbursement double precision,
-        usd_received double precision,
-        usd_commitment_defl double precision,
-        usd_disbursement_defl double precision,
-        usd_received_defl double precision,
-        usd_adjustment double precision,
-        usd_adjustment_defl double precision,
-        usd_amountuntied double precision,
-        usd_amountpartialtied double precision,
-        usd_amounttied double precision,
-        usd_amountuntied_defl double precision,
-        usd_amountpartialtied_defl double precision,
-        usd_amounttied_defl double precision,
-        usd_IRTC double precision,
-        usd_expert_commitment double precision,
-        usd_expert_extended double precision,
-        usd_export_credit double precision,
-        currencycode integer,
-        commitment_national double precision,
-        disbursement_national double precision,
-        shortdescription text,
-        projecttitle text,
-        purposecode integer,
-        sectorcode integer,
-        channelcode double precision,
-        channelreportedname text,
-        geography text,
-        expectedstartdate varchar (63),
-        completiondate varchar (63),
-        longdescription text,
-        gender double precision,
-        trade double precision,
-        FTC double precision,
-        PBA double precision
-    );'''
+    sql = 'CREATE TABLE crs ('
+    column_spec_list = [column_name + ' ' + column_type for column_name, column_type in CRS_COLUMN_SPEC]
+    sql += ','.join(column_spec_list)
+    sql += ');'
+    cursor.execute(sql)
+
+
+def populate_crs_table(cursor, dataframe):
+    byte_buffer = StringIO.StringIO()
+    columns_of_interest = [column_name for column_name, column_type in CRS_COLUMN_SPEC]
+    dataframe[columns_of_interest].to_csv(byte_buffer, header=False, index=False)
+    byte_buffer.seek(0)  # rewind to beginning of the buffer
+    cursor.copy_expert("COPY crs FROM STDIN WITH CSV", byte_buffer)
 
 
 if __name__ == "__main__":
@@ -117,10 +133,14 @@ if __name__ == "__main__":
     connection = get_db_connection(host, database, user, password)
     cursor = connection.cursor()
 
-    master_pickle_path = '/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl'
-    dataframe = pd.read_pickle(master_pickle_path)
+    # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl')
+    dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/filtered.pkl')
 
-    build_code_tables(cursor, dataframe)
+    # build_code_tables(cursor, dataframe)
+
+    create_crs_table(cursor)
+    populate_crs_table(cursor, dataframe)
+
     connection.commit()
     cursor.close()
     connection.close()
