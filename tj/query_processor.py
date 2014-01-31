@@ -4,14 +4,16 @@ import collections
 from django.db import connection
 
 # TODO we need to order the columns properly for CSV export, perhaps use the list in build_crs_database.py?
+# note that could be done either in the select or in pandas, afterwards, maybe the latter is cleaner
 MASTER_QUERY = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
-               'sector.sectorname, purpose.purposename ' \
-               'FROM crs, recipient, donor, channel, sector, purpose ' \
+               'sector.sectorname, purpose.purposename, agency.agencyname ' \
+               'FROM crs, recipient, donor, channel, sector, purpose, agency ' \
                'WHERE crs.recipientcode = recipient.recipientcode AND ' \
                'crs.donorcode = donor.donorcode AND ' \
                'crs.channelcode = channel.channelcode AND ' \
                'crs.sectorcode = sector.sectorcode AND ' \
-               'crs.purposecode = purpose.purposecode'
+               'crs.purposecode = purpose.purposecode AND ' \
+               'crs.donorcode = agency.donorcode AND crs.agencycode = agency.agencycode '
 
 FRAME = pd.read_sql(MASTER_QUERY, connection)
 

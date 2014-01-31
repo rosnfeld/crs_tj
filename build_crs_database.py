@@ -8,7 +8,8 @@ import pandas as pd
 import StringIO
 
 # somewhat different than what is in models.py
-CODE_TABLES = ['donor', 'agency', 'recipient', 'region', 'incomegroup', 'flow', 'purpose', 'sector', 'channel']
+# 'agency' is omitted here as it's more complicated
+CODE_TABLES = ['donor', 'recipient', 'region', 'incomegroup', 'flow', 'purpose', 'sector', 'channel']
 
 # list of (column name, postgres type) tuples for the columns in the CRS data
 CRS_COLUMN_SPEC = [
@@ -107,9 +108,25 @@ def build_code_tables(cursor, dataframe):
 
         cursor.execute(create_sql)
 
+        insert_sql = "INSERT INTO {table_name} VALUES (%(code)s, %(name)s);".format(table_name=table_name)
         for i, row in rows.iterrows():
-            insert_sql = "INSERT INTO {table_name} VALUES (%(code)s, %(name)s);".format(table_name=table_name)
             cursor.execute(insert_sql, {'code': row['code'], 'name': row['name']})
+
+
+def build_agency_table(cursor, dataframe):
+    """
+    Agencies are special in that they have the compound key (donorcode, agencycode)
+    """
+    rows = dataframe[['donorcode', 'agencycode', 'agencyname']].drop_duplicates()
+
+    create_sql = 'CREATE TABLE agency (donorcode integer, agencycode integer, agencyname varchar(127), ' \
+                 'PRIMARY KEY(donorcode, agencycode));'
+    cursor.execute(create_sql)
+
+    insert_sql = "INSERT INTO agency VALUES (%(donorcode)s, %(agencycode)s, %(agencyname)s);"
+    for i, row in rows.iterrows():
+        cursor.execute(insert_sql, {'donorcode': row['donorcode'], 'agencycode': row['agencycode'],
+                                    'agencyname': row['agencyname']})
 
 
 def create_crs_table(cursor):
@@ -152,13 +169,14 @@ if __name__ == "__main__":
     connection = get_db_connection(host, database, user, password)
     cursor = connection.cursor()
 
-    # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl')
-    dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/filtered.pkl')
+    dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl')
+    # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/filtered.pkl')
 
     # build_code_tables(cursor, dataframe)
+    build_agency_table(cursor, dataframe)
 
-    create_crs_table(cursor)
-    populate_crs_table(cursor, dataframe)
+    # create_crs_table(cursor)
+    # populate_crs_table(cursor, dataframe)
 
     connection.commit()
     cursor.close()
