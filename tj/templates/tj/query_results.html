@@ -19,7 +19,7 @@
         {% for i, row in rows.iterrows %}
             <tr id="r_{{ i }}">
                 <td><input type='checkbox' id='c_{{ i }}' onchange='handleCheckbox(this)'/></td>
-                <td>{{ row.Year }}</td>
+                <td>{{ row.year }}</td>
                 <td>{{ row.recipientname }}</td>
                 <td>{{ row.donorname }}</td>
                 <td>{{ row.agencyname }}</td>

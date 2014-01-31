@@ -1,31 +1,19 @@
 import pandas as pd
 import StringIO
 import collections
-import os
+from django.db import connection
 
-import urlparse
-import urllib2
-import boto
-import cPickle as pickle
+# TODO we need to order the columns properly for CSV export, perhaps use the list in build_crs_database.py?
+MASTER_QUERY = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
+               'sector.sectorname, purpose.purposename ' \
+               'FROM crs, recipient, donor, channel, sector, purpose ' \
+               'WHERE crs.recipientcode = recipient.recipientcode AND ' \
+               'crs.donorcode = donor.donorcode AND ' \
+               'crs.channelcode = channel.channelcode AND ' \
+               'crs.sectorcode = sector.sectorcode AND ' \
+               'crs.purposecode = purpose.purposecode'
 
-DATA_PICKLE_URL = os.environ.get('DATA_PICKLE_URL')
-
-# unfortunately pandas code for reading pickle doesn't handle URLs (I should add an issue about that),
-# so have to do some magic here
-
-parsed_url = urlparse.urlparse(DATA_PICKLE_URL)
-if parsed_url.scheme == 's3':
-    connection = boto.connect_s3()
-    bucket = connection.get_bucket(parsed_url.netloc)
-    k = boto.s3.key.Key(bucket)
-    k.key = parsed_url.path
-    buffer = StringIO.StringIO(k.get_contents_as_string())
-else:
-    buffer = urllib2.urlopen(DATA_PICKLE_URL)
-
-# "singleton" cached instance, for now
-# eventually I expect to do proper database queries
-FRAME = pickle.load(buffer)
+FRAME = pd.read_sql(MASTER_QUERY, connection)
 
 
 def find_rows_matching_code_filters(source_rows, code_filters):
@@ -52,7 +40,7 @@ def find_rows_matching_code_filters(source_rows, code_filters):
 
 def find_rows_matching_query_text(source_rows, text):
     # not exactly sure why the decode is necessary, but we get a UnicodeDecodeError otherwise
-    row_filter = lambda x: isinstance(x, basestring) and text in x.decode('utf-8').lower()
+    row_filter = lambda x: isinstance(x, basestring) and text in x.lower()
 
     matching_projecttitle = FRAME.projecttitle.apply(row_filter)
     matching_shortdescription = FRAME.shortdescription.apply(row_filter)
@@ -113,7 +101,7 @@ def convert_to_csv_string_for_export(dataframe):
 
     stringio = StringIO.StringIO()
 
-    dataframe.to_csv(stringio, index=False)
+    dataframe.to_csv(stringio, index=False, encoding='utf-8')
 
     return stringio.getvalue()
 
