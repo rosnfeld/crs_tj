@@ -66,7 +66,7 @@ CRS_COLUMN_SPEC = [
 
 # custom columns we want to add to the data
 TJ_CATEGORY_COLUMN_NAME = 'tj_category_id'
-INCLUSION_COLUMN_NAME = 'desired_id'
+INCLUSION_COLUMN_NAME = 'inclusion_id'
 
 
 def get_db_connection(host, database, user, password):
@@ -129,6 +129,33 @@ def build_agency_table(cursor, dataframe):
                                     'agencyname': row['agencyname']})
 
 
+def build_custom_data_tables(cursor):
+    # yes, these are just code-tables that we don't expect to change...
+    # they are hard-coded here, could be hardcoded in the web app,
+    # but this makes it nicer if people ever want to query the db directly
+    # or build another app on top of this data
+    inclusion_create_sql = "CREATE TABLE inclusion (" + INCLUSION_COLUMN_NAME +\
+                           " smallint PRIMARY KEY, inclusion_name varchar(31));"
+    cursor.execute(inclusion_create_sql)
+
+    inclusion_insert_sql = "INSERT INTO inclusion VALUES (%(inclusion_id)s, %(inclusion_name)s);"
+    cursor.execute(inclusion_insert_sql, {'inclusion_id': 0, 'inclusion_name': 'Exclude'})
+    cursor.execute(inclusion_insert_sql, {'inclusion_id': 1, 'inclusion_name': 'Include'})
+    cursor.execute(inclusion_insert_sql, {'inclusion_id': 2, 'inclusion_name': 'Maybe include'})
+    # and if we ever come up with other tiers of inclusion, we can add them here
+
+    category_create_sql = "CREATE TABLE tj_category (" + TJ_CATEGORY_COLUMN_NAME +\
+                          " smallint PRIMARY KEY, tj_category_name varchar(31));"
+    cursor.execute(category_create_sql)
+
+    category_insert_sql = "INSERT INTO tj_category VALUES (%(tj_category_id)s, %(tj_category_name)s);"
+    cursor.execute(category_insert_sql, {'tj_category_id': 1, 'tj_category_name': 'Truth and memory'})
+    cursor.execute(category_insert_sql, {'tj_category_id': 2, 'tj_category_name': 'Criminal justice'})
+    cursor.execute(category_insert_sql, {'tj_category_id': 3, 'tj_category_name': 'Reparations'})
+    cursor.execute(category_insert_sql, {'tj_category_id': 4, 'tj_category_name': 'Institutional reform'})
+    cursor.execute(category_insert_sql, {'tj_category_id': 5, 'tj_category_name': 'General reconciliation work'})
+
+
 def create_crs_table(cursor):
     sql = 'CREATE TABLE crs ('
 
@@ -169,11 +196,13 @@ if __name__ == "__main__":
     connection = get_db_connection(host, database, user, password)
     cursor = connection.cursor()
 
-    dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl')
+    # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl')
     # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/filtered.pkl')
 
     # build_code_tables(cursor, dataframe)
-    build_agency_table(cursor, dataframe)
+    # build_agency_table(cursor, dataframe)
+
+    build_custom_data_tables(cursor)
 
     # create_crs_table(cursor)
     # populate_crs_table(cursor, dataframe)
