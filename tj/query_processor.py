@@ -7,13 +7,13 @@ from django.db import connection
 # note that could be done either in the select or in pandas, afterwards, maybe the latter is cleaner
 MASTER_QUERY = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
                'sector.sectorname, purpose.purposename, agency.agencyname ' \
-               'FROM crs, recipient, donor, channel, sector, purpose, agency ' \
-               'WHERE crs.recipientcode = recipient.recipientcode AND ' \
-               'crs.donorcode = donor.donorcode AND ' \
-               'crs.channelcode = channel.channelcode AND ' \
-               'crs.sectorcode = sector.sectorcode AND ' \
-               'crs.purposecode = purpose.purposecode AND ' \
-               'crs.donorcode = agency.donorcode AND crs.agencycode = agency.agencycode '
+               'FROM crs ' \
+               'INNER JOIN recipient ON (crs.recipientcode = recipient.recipientcode) ' \
+               'INNER JOIN donor ON (crs.donorcode = donor.donorcode) ' \
+               'INNER JOIN sector ON (crs.sectorcode = sector.sectorcode) ' \
+               'INNER JOIN purpose ON (crs.purposecode = purpose.purposecode) ' \
+               'INNER JOIN agency ON (crs.donorcode = agency.donorcode AND crs.agencycode = agency.agencycode) ' \
+               'LEFT OUTER JOIN channel ON (crs.channelcode = channel.channelcode) '
 
 FRAME = pd.read_sql(MASTER_QUERY, connection)
 
