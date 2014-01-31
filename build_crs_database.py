@@ -12,17 +12,18 @@ import StringIO
 CODE_TABLES = ['donor', 'recipient', 'region', 'incomegroup', 'flow', 'purpose', 'sector', 'channel']
 
 # list of (column name, postgres type) tuples for the columns in the CRS data
+# note that postgres will remove any capitalization, e.g. Year -> year
 CRS_COLUMN_SPEC = [
     ('Year', 'integer'),
-    ('donorcode', 'integer'),
+    ('donorcode', 'integer REFERENCES donor'),
     ('agencycode', 'integer'),
     ('crsid', 'varchar (63)'),
     ('projectnumber', 'varchar (63)'),
     ('initialreport', 'integer'),
-    ('recipientcode', 'integer'),
-    ('regioncode', 'integer'),
-    ('incomegroupcode', 'integer'),
-    ('flowcode', 'integer'),
+    ('recipientcode', 'integer REFERENCES recipient'),
+    ('regioncode', 'integer REFERENCES region'),
+    ('incomegroupcode', 'integer REFERENCES incomegroup'),
+    ('flowcode', 'integer REFERENCES flow'),
     ('bi_multi', 'integer'),
     ('category', 'integer'),
     ('finance_t', 'integer'),
@@ -50,8 +51,9 @@ CRS_COLUMN_SPEC = [
     ('disbursement_national', 'double precision'),
     ('shortdescription', 'text'),
     ('projecttitle', 'text'),
-    ('purposecode', 'integer'),
-    ('sectorcode', 'integer'),
+    ('purposecode', 'integer REFERENCES purpose'),
+    ('sectorcode', 'integer REFERENCES sector'),
+    # should be 'integer REFERENCES channel', but pandas data has channelcode as float to handle nulls
     ('channelcode', 'double precision'),
     ('channelreportedname', 'text'),
     ('geography', 'text'),
@@ -65,8 +67,8 @@ CRS_COLUMN_SPEC = [
 ]
 
 # custom columns we want to add to the data
-TJ_CATEGORY_COLUMN_NAME = 'tj_category_id'
-INCLUSION_COLUMN_NAME = 'inclusion_id'
+CATEGORY_COLUMN_NAME = 'tj_category_id'
+INCLUSION_COLUMN_NAME = 'tj_inclusion_id'
 
 
 def get_db_connection(host, database, user, password):
@@ -90,10 +92,20 @@ def get_all_name_code_pairs(dataframe, filter_type):
 
     rows = rows.sort(name_column)
 
+    if filter_type == 'purpose':
+        # hack around an unfortunate issue in CRS data
+        # There are two names assigned to purposecode 11420, so we have to remove one of them
+        # It shouldn't affect this analysis since these aren't TJ-related
+        rows = rows[rows.purposename != 'Imputed student costs']
+
     return rows.rename(columns={code_column: 'code', name_column: 'name'})
 
 
 def build_code_tables(cursor, dataframe):
+    create_template = 'CREATE TABLE {table_name} ({code_column} integer primary key, {name_column} varchar(127));'
+    insert_template = "INSERT INTO {table_name} VALUES (%(code)s, %(name)s);"
+    index_template = 'CREATE UNIQUE INDEX ON {table_name} ({code_column});'
+
     for filter_type in CODE_TABLES:
         table_name = filter_type
         rows = get_all_name_code_pairs(dataframe, filter_type)
@@ -102,15 +114,18 @@ def build_code_tables(cursor, dataframe):
         code_column = filter_type + 'code'
         name_column = filter_type + 'name'
 
-        # create table and populate it
-        create_template = 'CREATE TABLE {table_name} ({code_column} integer primary key, {name_column} varchar(127));'
-        create_sql = create_template.format(table_name=table_name, code_column=code_column, name_column=name_column)
+        name_map = {'table_name': table_name, 'code_column': code_column, 'name_column': name_column}
 
+        # create table, populate it, and add an index
+        create_sql = create_template.format(**name_map)
         cursor.execute(create_sql)
 
-        insert_sql = "INSERT INTO {table_name} VALUES (%(code)s, %(name)s);".format(table_name=table_name)
+        insert_sql = insert_template.format(**name_map)
         for i, row in rows.iterrows():
             cursor.execute(insert_sql, {'code': row['code'], 'name': row['name']})
+
+        index_sql = index_template.format(**name_map)
+        cursor.execute(index_sql)
 
 
 def build_agency_table(cursor, dataframe):
@@ -123,10 +138,13 @@ def build_agency_table(cursor, dataframe):
                  'PRIMARY KEY(donorcode, agencycode));'
     cursor.execute(create_sql)
 
-    insert_sql = "INSERT INTO agency VALUES (%(donorcode)s, %(agencycode)s, %(agencyname)s);"
+    insert_sql = 'INSERT INTO agency VALUES (%(donorcode)s, %(agencycode)s, %(agencyname)s);'
     for i, row in rows.iterrows():
         cursor.execute(insert_sql, {'donorcode': row['donorcode'], 'agencycode': row['agencycode'],
                                     'agencyname': row['agencyname']})
+
+    index_sql = 'CREATE UNIQUE INDEX ON agency(donorcode, agencycode);'
+    cursor.execute(index_sql)
 
 
 def build_custom_data_tables(cursor):
@@ -134,17 +152,20 @@ def build_custom_data_tables(cursor):
     # they are hard-coded here, could be hardcoded in the web app,
     # but this makes it nicer if people ever want to query the db directly
     # or build another app on top of this data
-    inclusion_create_sql = "CREATE TABLE inclusion (" + INCLUSION_COLUMN_NAME +\
-                           " smallint PRIMARY KEY, inclusion_name varchar(31));"
+    inclusion_create_sql = "CREATE TABLE tj_inclusion (" + INCLUSION_COLUMN_NAME +\
+                           " smallint PRIMARY KEY, tj_inclusion_name varchar(31));"
     cursor.execute(inclusion_create_sql)
 
-    inclusion_insert_sql = "INSERT INTO inclusion VALUES (%(inclusion_id)s, %(inclusion_name)s);"
-    cursor.execute(inclusion_insert_sql, {'inclusion_id': 0, 'inclusion_name': 'Exclude'})
-    cursor.execute(inclusion_insert_sql, {'inclusion_id': 1, 'inclusion_name': 'Include'})
-    cursor.execute(inclusion_insert_sql, {'inclusion_id': 2, 'inclusion_name': 'Maybe include'})
+    inclusion_insert_sql = "INSERT INTO tj_inclusion VALUES (%(tj_inclusion_id)s, %(tj_inclusion_name)s);"
+    cursor.execute(inclusion_insert_sql, {'tj_inclusion_id': 0, 'tj_inclusion_name': 'Exclude'})
+    cursor.execute(inclusion_insert_sql, {'tj_inclusion_id': 1, 'tj_inclusion_name': 'Include'})
+    cursor.execute(inclusion_insert_sql, {'tj_inclusion_id': 2, 'tj_inclusion_name': 'Maybe include'})
     # and if we ever come up with other tiers of inclusion, we can add them here
 
-    category_create_sql = "CREATE TABLE tj_category (" + TJ_CATEGORY_COLUMN_NAME +\
+    inclusion_index_sql = "CREATE UNIQUE INDEX on tj_inclusion (" + INCLUSION_COLUMN_NAME + ");"
+    cursor.execute(inclusion_index_sql)
+
+    category_create_sql = "CREATE TABLE tj_category (" + CATEGORY_COLUMN_NAME +\
                           " smallint PRIMARY KEY, tj_category_name varchar(31));"
     cursor.execute(category_create_sql)
 
@@ -154,14 +175,18 @@ def build_custom_data_tables(cursor):
     cursor.execute(category_insert_sql, {'tj_category_id': 3, 'tj_category_name': 'Reparations'})
     cursor.execute(category_insert_sql, {'tj_category_id': 4, 'tj_category_name': 'Institutional reform'})
     cursor.execute(category_insert_sql, {'tj_category_id': 5, 'tj_category_name': 'General reconciliation work'})
+    # and if we ever come up with other categories, we can add them here
+
+    category_index_sql = "CREATE UNIQUE INDEX on tj_category (" + CATEGORY_COLUMN_NAME + ");"
+    cursor.execute(category_index_sql)
 
 
 def create_crs_table(cursor):
     sql = 'CREATE TABLE crs ('
 
     # custom columns
-    sql += INCLUSION_COLUMN_NAME + ' smallint,'
-    sql += TJ_CATEGORY_COLUMN_NAME + ' smallint,'
+    sql += INCLUSION_COLUMN_NAME + ' smallint REFERENCES tj_inclusion,'
+    sql += CATEGORY_COLUMN_NAME + ' smallint REFERENCES tj_category,'
 
     # desired columns from CRS file
     column_spec_list = [column_name + ' ' + column_type for column_name, column_type in CRS_COLUMN_SPEC]
@@ -174,11 +199,11 @@ def create_crs_table(cursor):
 def populate_crs_table(cursor, dataframe):
     # add empty custom columns to dataframe
     dataframe[INCLUSION_COLUMN_NAME] = None
-    dataframe[TJ_CATEGORY_COLUMN_NAME] = None
+    dataframe[CATEGORY_COLUMN_NAME] = None
 
     # write the dataframe to a buffer
     byte_buffer = StringIO.StringIO()
-    columns_of_interest = [INCLUSION_COLUMN_NAME, TJ_CATEGORY_COLUMN_NAME]
+    columns_of_interest = [INCLUSION_COLUMN_NAME, CATEGORY_COLUMN_NAME]
     columns_of_interest.extend([column_name for column_name, column_type in CRS_COLUMN_SPEC])
     dataframe[columns_of_interest].to_csv(byte_buffer, header=False, index=False)
     byte_buffer.seek(0)  # rewind to beginning of the buffer
@@ -197,15 +222,16 @@ if __name__ == "__main__":
     cursor = connection.cursor()
 
     # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/all_data.pkl')
-    # dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/filtered.pkl')
+    dataframe = pd.read_pickle('/home/andrew/oecd/crs/processed/2014-01-30/filtered.pkl')
 
-    # build_code_tables(cursor, dataframe)
-    # build_agency_table(cursor, dataframe)
+    build_code_tables(cursor, dataframe)
+    build_agency_table(cursor, dataframe)
 
     build_custom_data_tables(cursor)
 
-    # create_crs_table(cursor)
-    # populate_crs_table(cursor, dataframe)
+    create_crs_table(cursor)
+    populate_crs_table(cursor, dataframe)
+    # TODO add indexes to crs to improve full text search performance
 
     connection.commit()
     cursor.close()
