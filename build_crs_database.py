@@ -63,6 +63,10 @@ CRS_COLUMN_SPEC = [
     ('PBA', 'double precision')
 ]
 
+# custom columns we want to add to the data
+TJ_CATEGORY_COLUMN_NAME = 'tj_category_id'
+INCLUSION_COLUMN_NAME = 'desired_id'
+
 
 def get_db_connection(host, database, user, password):
     return psycopg2.connect(host=host, database=database, user=user, password=password)
@@ -110,17 +114,32 @@ def build_code_tables(cursor, dataframe):
 
 def create_crs_table(cursor):
     sql = 'CREATE TABLE crs ('
+
+    # custom columns
+    sql += INCLUSION_COLUMN_NAME + ' smallint,'
+    sql += TJ_CATEGORY_COLUMN_NAME + ' smallint,'
+
+    # desired columns from CRS file
     column_spec_list = [column_name + ' ' + column_type for column_name, column_type in CRS_COLUMN_SPEC]
     sql += ','.join(column_spec_list)
+
     sql += ');'
     cursor.execute(sql)
 
 
 def populate_crs_table(cursor, dataframe):
+    # add empty custom columns to dataframe
+    dataframe[INCLUSION_COLUMN_NAME] = None
+    dataframe[TJ_CATEGORY_COLUMN_NAME] = None
+
+    # write the dataframe to a buffer
     byte_buffer = StringIO.StringIO()
-    columns_of_interest = [column_name for column_name, column_type in CRS_COLUMN_SPEC]
+    columns_of_interest = [INCLUSION_COLUMN_NAME, TJ_CATEGORY_COLUMN_NAME]
+    columns_of_interest.extend([column_name for column_name, column_type in CRS_COLUMN_SPEC])
     dataframe[columns_of_interest].to_csv(byte_buffer, header=False, index=False)
     byte_buffer.seek(0)  # rewind to beginning of the buffer
+
+    # bulk-load the table from the buffer
     cursor.copy_expert("COPY crs FROM STDIN WITH CSV", byte_buffer)
 
 
