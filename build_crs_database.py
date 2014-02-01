@@ -184,6 +184,9 @@ def build_custom_data_tables(cursor):
 def create_crs_table(cursor):
     sql = 'CREATE TABLE crs ('
 
+    # auto-generated primary key
+    sql += 'crs_pk serial PRIMARY KEY,'
+
     # custom columns
     sql += INCLUSION_COLUMN_NAME + ' smallint REFERENCES tj_inclusion,'
     sql += CATEGORY_COLUMN_NAME + ' smallint REFERENCES tj_category,'
@@ -197,19 +200,15 @@ def create_crs_table(cursor):
 
 
 def populate_crs_table(cursor, dataframe):
-    # add empty custom columns to dataframe
-    dataframe[INCLUSION_COLUMN_NAME] = None
-    dataframe[CATEGORY_COLUMN_NAME] = None
-
     # write the dataframe to a buffer
     byte_buffer = StringIO.StringIO()
-    columns_of_interest = [INCLUSION_COLUMN_NAME, CATEGORY_COLUMN_NAME]
-    columns_of_interest.extend([column_name for column_name, column_type in CRS_COLUMN_SPEC])
+    columns_of_interest = [column_name for column_name, column_type in CRS_COLUMN_SPEC]
     dataframe[columns_of_interest].to_csv(byte_buffer, header=False, index=False)
     byte_buffer.seek(0)  # rewind to beginning of the buffer
 
     # bulk-load the table from the buffer
-    cursor.copy_expert("COPY crs FROM STDIN WITH CSV", byte_buffer)
+    copy_sql = "COPY crs({columns}) FROM STDIN WITH CSV".format(columns=",".join(columns_of_interest))
+    cursor.copy_expert(copy_sql, byte_buffer)
 
 
 def index_crs_table(cursor):
