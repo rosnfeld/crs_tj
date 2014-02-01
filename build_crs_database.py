@@ -212,6 +212,33 @@ def populate_crs_table(cursor, dataframe):
     cursor.copy_expert("COPY crs FROM STDIN WITH CSV", byte_buffer)
 
 
+def index_crs_table(cursor):
+    # index code table columns in main crs table as we'll use them to filter queries
+    code_index_template = 'CREATE INDEX {index_name} ON crs ({code_column});'
+
+    for filter_type in CODE_TABLES:
+        name_map = {'index_name': 'crs_' + filter_type + 'code_idx', 'code_column': filter_type + 'code'}
+        index_sql = code_index_template.format(**name_map)
+        cursor.execute(index_sql)
+
+    # Add a special column to crs just for text search, then index it.
+
+    alter_sql = 'ALTER TABLE crs ADD COLUMN searchable_text tsvector;'
+    cursor.execute(alter_sql)
+
+    # Unfortunately we have to pick a language here, and our text columns are in several different languages.
+    # If we could figure out the language of each row (by donor, recipient, or text analysis?) and store it in
+    # a column, then we could use to_tsvector(language_column, text_column).
+    update_sql = "UPDATE crs SET searchable_text = to_tsvector('english'," \
+                 "coalesce(projecttitle,'') || ' ' || " \
+                 "coalesce(shortdescription,'') || ' ' || " \
+                 "coalesce(longdescription,''));"
+    cursor.execute(update_sql)
+
+    text_index_sql = "CREATE INDEX crs_textsearch_idx ON crs USING gin(searchable_text);"
+    cursor.execute(text_index_sql)
+
+
 if __name__ == "__main__":
     host = os.environ['POSTGRES_HOST']
     database = os.environ['POSTGRES_DB']
@@ -231,7 +258,7 @@ if __name__ == "__main__":
 
     create_crs_table(cursor)
     populate_crs_table(cursor, dataframe)
-    # TODO add indexes to crs to improve full text search performance
+    index_crs_table(cursor)
 
     connection.commit()
     cursor.close()
