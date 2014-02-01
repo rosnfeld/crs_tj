@@ -170,7 +170,7 @@ def filter_master_file(input_path, output_path):
     master = pd.read_pickle(input_path)
     filtered = apply_purpose_code_filter(master)
     filtered = apply_year_filter(filtered)
-    filtered = apply_country_filter(filtered)
+    # filtered = apply_country_filter(filtered)
     remove_unnecessary_columns(filtered)
 
     filtered.to_pickle(output_path)
@@ -181,7 +181,7 @@ if __name__ == "__main__":
     download_dir = '/home/andrew/oecd/crs/downloads/2014-01-30/'
     processed_dir = download_dir.replace('downloads', 'processed')
 
-    os.makedirs(processed_dir)
-    convert_download_directory(download_dir, processed_dir)
-    build_master_file(processed_dir)
+    # os.makedirs(processed_dir)
+    # convert_download_directory(download_dir, processed_dir)
+    # build_master_file(processed_dir)
     filter_master_file(processed_dir + MASTER_PICKLE_FILE_NAME, processed_dir + 'filtered.pkl')
