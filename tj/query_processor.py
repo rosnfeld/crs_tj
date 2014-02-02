@@ -5,21 +5,22 @@ from django.db import connection
 
 # TODO we need to order the columns properly for CSV export, perhaps use the list in build_crs_database.py?
 # note that could be done either in the select or in pandas, afterwards, maybe the latter is cleaner
-MASTER_QUERY = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
-               'sector.sectorname, purpose.purposename, agency.agencyname ' \
-               'FROM crs ' \
-               'INNER JOIN recipient ON (crs.recipientcode = recipient.recipientcode) ' \
-               'INNER JOIN donor ON (crs.donorcode = donor.donorcode) ' \
-               'INNER JOIN sector ON (crs.sectorcode = sector.sectorcode) ' \
-               'INNER JOIN purpose ON (crs.purposecode = purpose.purposecode) ' \
-               'INNER JOIN agency ON (crs.donorcode = agency.donorcode AND crs.agencycode = agency.agencycode) ' \
-               'LEFT OUTER JOIN channel ON (crs.channelcode = channel.channelcode) '
+# or could even just be done in the view... we could make a CSV view. Maybe that's best,
+BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
+           'sector.sectorname, purpose.purposename, agency.agencyname ' \
+           'FROM crs ' \
+           'INNER JOIN recipient ON (crs.recipientcode = recipient.recipientcode) ' \
+           'INNER JOIN donor ON (crs.donorcode = donor.donorcode) ' \
+           'INNER JOIN sector ON (crs.sectorcode = sector.sectorcode) ' \
+           'INNER JOIN purpose ON (crs.purposecode = purpose.purposecode) ' \
+           'INNER JOIN agency ON (crs.donorcode = agency.donorcode AND crs.agencycode = agency.agencycode) ' \
+           'LEFT OUTER JOIN channel ON (crs.channelcode = channel.channelcode) '
 
-FRAME = pd.read_sql(MASTER_QUERY, connection)
 
-
-def find_rows_matching_code_filters(source_rows, code_filters):
-    rows = source_rows
+def execute_query(query_text, code_filters):
+    # we will want to revisit plainto_tsquery to provide fancier searching, but not at this phase
+    where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
+    params = [query_text]
 
     # group codes by filter type
     codes_per_filter_type = collections.defaultdict(list)
@@ -27,38 +28,25 @@ def find_rows_matching_code_filters(source_rows, code_filters):
         codes_per_filter_type[code_filter.filter_type].append(code_filter.code)
 
     # do an OR across all filters of a given filtertype, and then an AND across filter types
+    # TODO fancier logic to properly handle agencies
+    # TODO fancier logic to handle null channels
     for filter_type, codes in codes_per_filter_type.iteritems():
-        column = filter_type + 'code'
-        boolean_mask = pd.Series(False, index=rows.index)
+        column = filter_type + '.' + filter_type + 'code'
 
-        for code in codes:
-            boolean_mask |= (rows[column] == code)
+        code_strings = [str(code) for code in codes]
 
-        # AND is implicit here... we reset rows to the result of the previous filtertype
-        rows = rows[boolean_mask]
+        # could use sql params here but ints are pretty safe to just write in explicitly
+        where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
 
-    return rows
+    limit_clause = 'LIMIT 100;'
 
-
-def find_rows_matching_query_text(source_rows, text):
-    # not exactly sure why the decode is necessary, but we get a UnicodeDecodeError otherwise
-    row_filter = lambda x: isinstance(x, basestring) and text in x.lower()
-
-    matching_projecttitle = FRAME.projecttitle.apply(row_filter)
-    matching_shortdescription = FRAME.shortdescription.apply(row_filter)
-    matching_longdescription = FRAME.longdescription.apply(row_filter)
-
-    return source_rows[matching_projecttitle | matching_shortdescription | matching_longdescription]
+    return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, params=params)
 
 
 def get_matching_rows_for_query(query):
-    rows = FRAME
+    rows = execute_query(query.text, query.codefilter_set.all())
 
-    # first, reduce data size as much as possible using filters
-    rows = find_rows_matching_code_filters(rows, query.codefilter_set.all())
-
-    # then do the somewhat expensive operation of text search
-    rows = find_rows_matching_query_text(rows, query.text)
+    # manual exclusions are now broken, but they are going away anyhow
 
     # mark manual exclusions
     rows['excluded'] = False
