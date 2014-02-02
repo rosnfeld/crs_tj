@@ -108,21 +108,14 @@ def convert_to_csv_string_for_export(dataframe):
     return stringio.getvalue()
 
 
-def get_all_name_code_pairs(prefix):
+def get_all_name_code_pairs(filtertype):
     """
     Returns a dataframe containing ___code/___name pairs.
-    This method makes a minor argument for separating this data out at the processing step.
     """
-    code_column = prefix + 'code'
-    name_column = prefix + 'name'
+    rows = pd.read_sql('SELECT * FROM ' + filtertype + ';', connection)
 
-    rows = FRAME[[code_column, name_column]].drop_duplicates()
-
-    # filter out missing codes (can happen for channel), and missing values will mean that pandas will have
-    # interpreted code column as float (so that it can use NaN), need to set as int
-    rows = rows.dropna()
-    rows[code_column] = rows[code_column].astype(int)
-
+    code_column = filtertype + 'code'
+    name_column = filtertype + 'name'
     rows = rows.sort(name_column)
 
     return rows.rename(columns={code_column: 'code', name_column: 'name'})
