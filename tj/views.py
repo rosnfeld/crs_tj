@@ -218,3 +218,7 @@ def combo_delete(request, combo_id):
     combo = get_object_or_404(QueryCombination, pk=combo_id)
     combo.delete()
     return HttpResponseRedirect(reverse('combos_home'))
+
+
+def query_build(request):
+    return render(request, 'tj/query_builder.html', {'code_filter_types': CODE_FILTER_TYPES})

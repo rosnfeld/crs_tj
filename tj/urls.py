@@ -18,6 +18,7 @@ urlpatterns = patterns('',
     url(r'^query/(?P<query_id>\d+)/filters', views.query_get_filters_json, name='query_get_filters_json'),
     url(r'^query/(?P<query_id>\d+)/filter_edit/(?P<filter_type>\w+)', views.query_filter_edit, name='query_filter_edit'),
     url(r'^query/(?P<query_id>\d+)/filter_update/(?P<filter_type>\w+)', views.query_filter_update, name='query_filter_update'),
+    url(r'^query/build', views.query_build, name='query_build'),
 
     url(r'^combo/?$', views.combos_home, name='combos_home'),
     url(r'^combo/create$', views.combo_create, name='combo_create'),

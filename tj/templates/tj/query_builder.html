@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Query CRS</title>
+    {% include 'tj/header_includes.html' %}
+    {% load staticfiles %}
+    <script src="{% static 'tj/filter_manager.js' %}"></script>
+
+    <script>
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            crossDomain: false, // obviates need for sameOrigin test
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+                }
+            }
+        });
+
+        function refreshTable() {
+            $.ajax({
+                url: "",
+
+                type: "GET",
+
+                success: function (html) {
+                    $("#table_holder").html(html);
+                },
+
+                error: function (xhr, status) {
+                    alert("Failed to process query results");
+                }
+            });
+        }
+
+        function editFilter(filter_box_url) {
+            $.ajax({
+                url: filter_box_url,
+
+                type: "GET",
+
+                success: function (html) {
+                    $("#modal_holder").html(html);
+                    $("#modal_filter").modal()
+                },
+
+                error: function (xhr, status) {
+                    alert("Failed to edit filter");
+                }
+            });
+        }
+
+        function style_filter_dropdowns() {
+            var filter_types = getFilterTypes();
+            for (var i = 0; i < filter_types.length; i++) {
+                var filter_type = filter_types[i];
+                var filter_jquery_object = $('#fb_' + filter_type);
+                if (isFilterActive(filter_type)) {
+                    filter_jquery_object.addClass('filter_active');
+                } else {
+                    filter_jquery_object.removeClass('filter_active');
+                }
+            }
+        }
+
+        $(document).ready(function() {
+{#            refreshTable();#}
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <ol class="breadcrumb">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li class="active">Query CRS</li>
+    </ol>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="form-group">
+                <label for="query_text">Query</label>
+                <input type="text" id="query_text" value="" class="form-control" placeholder="search terms">
+            </div>
+            <label>Filters</label>
+            <div>
+                {% for filter_type in code_filter_types %}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
+                                onclick="editFilter('TODO')">
+                            {{ filter_type|title }} <span class="caret"></span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+            <br/>
+            <div class="input-group">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" onclick="TODO">
+                        <span class="glyphicon glyphicon-search"></span>
+                        Run Query
+                    </button>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div id="message_holder"></div>
+    <div id="table_holder"></div>
+    <div id="modal_holder"></div>
+</div>
+</body>
+</html>
