@@ -222,3 +222,17 @@ def combo_delete(request, combo_id):
 
 def query_build(request):
     return render(request, 'tj/query_builder.html', {'code_filter_types': CODE_FILTER_TYPES})
+
+
+def query_results_new(request):
+    payload = request.read()
+    json_payload = json.loads(payload)
+
+    query = query_processor.QueryParams(json_payload['search_terms'])
+
+    for filter_type, code in json_payload['code_filters']:
+        query.add_code_filter(filter_type, code)
+
+    rows = query_processor.get_matching_rows_for_query_new(query)
+
+    return render(request, 'tj/query_results.html', {'rows': rows})

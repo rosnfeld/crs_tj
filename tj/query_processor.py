@@ -17,6 +17,21 @@ BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.chan
            'LEFT OUTER JOIN channel ON (crs.channelcode = channel.channelcode) '
 
 
+class CodeFilterParams(object):
+    def __init__(self, filter_type, code):
+        self.filter_type = filter_type
+        self.code = code
+
+
+class QueryParams(object):
+    def __init__(self, search_terms):
+        self.search_terms = search_terms
+        self.code_filters = []
+
+    def add_code_filter(self, filter_type, code):
+        self.code_filters.append(CodeFilterParams(filter_type, code))
+
+
 def execute_query(query_text, code_filters):
     # we will want to revisit plainto_tsquery to provide fancier searching, but not at this phase
     where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
@@ -41,6 +56,10 @@ def execute_query(query_text, code_filters):
     limit_clause = 'LIMIT 100;'
 
     return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, params=params)
+
+
+def get_matching_rows_for_query_new(query_params):
+    return execute_query(query_params.search_terms, query_params.code_filters)
 
 
 def get_matching_rows_for_query(query):
