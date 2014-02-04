@@ -3,9 +3,6 @@
 <head>
     <title>Query CRS</title>
     {% include 'tj/header_includes.html' %}
-    {% load staticfiles %}
-    <script src="{% static 'tj/filter_manager.js' %}"></script>
-
     <script>
         function csrfSafeMethod(method) {
             // these HTTP methods do not require CSRF protection
@@ -20,16 +17,34 @@
             }
         });
 
+        function getSelectedCodesForFilter(filter_type) {
+            var results = [];
+
+            var selector = 'input:checkbox[id^="' + filter_type + '_"]:checked';
+            $(selector).each(function (index, item) {
+                var checkbox_id = $(this).attr('id');
+                var code = checkbox_id.substring(checkbox_id.lastIndexOf('_') + 1);
+                results.push(code);
+            });
+
+            return results;
+        }
+
         function refreshTable() {
-            // redo this as in jQuery?
+            // redo this as jQuery?
             var search_terms = document.getElementById('query_text').value;
+
+            var code_filters = {};
+            {% for filter_type in code_filter_types %}
+            code_filters['{{ filter_type }}'] = getSelectedCodesForFilter('{{ filter_type }}');
+            {% endfor %}
 
             $.ajax({
                 url: "{% url 'query_results_new' %}",
 
                 type: "POST",
 
-                data: JSON.stringify({search_terms: search_terms, code_filters: []}),
+                data: JSON.stringify({search_terms: search_terms, code_filters: code_filters}),
 
                 contentType: "application/json; charset=utf-8",
 
@@ -43,38 +58,20 @@
             });
         }
 
-        function editFilter(filter_box_url) {
-            $.ajax({
-                url: filter_box_url,
-
-                type: "GET",
-
-                success: function (html) {
-                    $("#modal_holder").html(html);
-                    $("#modal_filter").modal()
-                },
-
-                error: function (xhr, status) {
-                    alert("Failed to edit filter");
-                }
-            });
+        function editFilter(filter_type) {
+            $("#modal_filter_" + filter_type).modal();
         }
 
-        function style_filter_dropdowns() {
-            var filter_types = getFilterTypes();
-            for (var i = 0; i < filter_types.length; i++) {
-                var filter_type = filter_types[i];
-                var filter_jquery_object = $('#fb_' + filter_type);
-                if (isFilterActive(filter_type)) {
-                    filter_jquery_object.addClass('filter_active');
-                } else {
-                    filter_jquery_object.removeClass('filter_active');
-                }
+        function style_filter_dropdown(filter_type) {
+            var filter_jquery_object = $('#fb_' + filter_type);
+            if (getSelectedCodesForFilter(filter_type).length > 0) {
+                filter_jquery_object.addClass('filter_active');
+            } else {
+                filter_jquery_object.removeClass('filter_active');
             }
         }
 
         $(document).ready(function() {
-{#            refreshTable();#}
         });
     </script>
 </head>
@@ -95,7 +92,7 @@
                 {% for filter_type in code_filter_types %}
                     <div class="btn-group">
                         <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
-                                onclick="editFilter('TODO')">
+                                onclick="editFilter('{{ filter_type }}')">
                             {{ filter_type|title }} <span class="caret"></span>
                         </button>
                     </div>
@@ -114,7 +111,49 @@
     </div>
     <div id="message_holder"></div>
     <div id="table_holder"></div>
-    <div id="modal_holder"></div>
+    <div id="modal_holder">
+        {% for filter_type, filter_rows in code_filter_map.items %}
+        <div class="modal fade" id="modal_filter_{{ filter_type }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="filter_title">Filter by {{ filter_type|title }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <em>Select the categories you would like to include.</em>
+                        <hr/>
+                        <div style="overflow:auto" id="{{ filter_type }}_option_list">
+                            {% for i, row in filter_rows.iterrows %}
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" class="others" id="{{ filter_type }}_{{ row.code }}">
+                                        {{ row.name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <script>
+                            var adjustListSize = function(){
+                                var list_id = '#{{ filter_type }}_option_list';
+                                // this fraction of browser height seems to look good
+                                $(list_id).css({'height': $(window).height() * 0.52});
+                            };
+
+                            $(window).bind("load resize", adjustListSize());
+
+                            adjustListSize();
+                        </script>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal"
+                                onclick="style_filter_dropdown('{{ filter_type }}')">Confirm Selections</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 </body>
 </html>

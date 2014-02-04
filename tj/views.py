@@ -221,7 +221,13 @@ def combo_delete(request, combo_id):
 
 
 def query_build(request):
-    return render(request, 'tj/query_builder.html', {'code_filter_types': CODE_FILTER_TYPES})
+    code_filter_map = {}
+    for filter_type in CODE_FILTER_TYPES:
+        code_filter_map[filter_type] = query_processor.get_all_name_code_pairs(filter_type)
+
+    return render(request, 'tj/query_builder.html',
+                  # pass the types explicitly as list, as order is important
+                  {'code_filter_types': CODE_FILTER_TYPES, 'code_filter_map': code_filter_map})
 
 
 def query_results_new(request):
@@ -230,8 +236,9 @@ def query_results_new(request):
 
     query = query_processor.QueryParams(json_payload['search_terms'])
 
-    for filter_type, code in json_payload['code_filters']:
-        query.add_code_filter(filter_type, code)
+    for filter_type, codes in json_payload['code_filters'].iteritems():
+        for code in codes:
+            query.add_code_filter(filter_type, code)
 
     rows = query_processor.get_matching_rows_for_query_new(query)
 
