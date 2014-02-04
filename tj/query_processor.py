@@ -3,18 +3,18 @@ import StringIO
 import collections
 from django.db import connection
 
-# TODO we need to order the columns properly for CSV export, perhaps use the list in build_crs_database.py?
-# note that could be done either in the select or in pandas, afterwards, maybe the latter is cleaner
-# or could even just be done in the view... we could make a CSV view. Maybe that's best,
 BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
-           'sector.sectorname, purpose.purposename, agency.agencyname ' \
+           'sector.sectorname, purpose.purposename, agency.agencyname, ' \
+           'tj_inclusion.tj_inclusion_name, tj_category.tj_category_name ' \
            'FROM crs ' \
            'INNER JOIN recipient ON (crs.recipientcode = recipient.recipientcode) ' \
            'INNER JOIN donor ON (crs.donorcode = donor.donorcode) ' \
            'INNER JOIN sector ON (crs.sectorcode = sector.sectorcode) ' \
            'INNER JOIN purpose ON (crs.purposecode = purpose.purposecode) ' \
            'INNER JOIN agency ON (crs.donorcode = agency.donorcode AND crs.agencycode = agency.agencycode) ' \
-           'LEFT OUTER JOIN channel ON (crs.channelcode = channel.channelcode) '
+           'LEFT OUTER JOIN channel ON (crs.channelcode = channel.channelcode) ' \
+           'LEFT OUTER JOIN tj_inclusion ON (crs.tj_inclusion_id = tj_inclusion.tj_inclusion_id) ' \
+           'LEFT OUTER JOIN tj_category ON (crs.tj_category_id = tj_category.tj_category_id) '
 
 
 class CodeFilterParams(object):
