@@ -16,6 +16,8 @@ BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.chan
            'LEFT OUTER JOIN tj_inclusion ON (crs.tj_inclusion_id = tj_inclusion.tj_inclusion_id) ' \
            'LEFT OUTER JOIN tj_category ON (crs.tj_category_id = tj_category.tj_category_id) '
 
+ROW_LIMIT = 25
+
 
 class CodeFilterParams(object):
     def __init__(self, filter_type, code):
@@ -53,7 +55,7 @@ def execute_query(query_text, code_filters):
         # could use sql params here but ints are pretty safe to just write in explicitly
         where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
 
-    limit_clause = 'ORDER BY crs.crs_pk LIMIT 25;'
+    limit_clause = 'ORDER BY crs.crs_pk LIMIT {row_limit};'.format(row_limit=ROW_LIMIT)
 
     return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, index_col="crs_pk", params=params)
 

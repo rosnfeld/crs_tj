@@ -1,6 +1,14 @@
+<div>
+    {% if rows.shape.0 < row_limit %}
+        Returned {{ rows.shape.0 }} (all) results.
+    {% else %}
+        Returned the maximum limit of {{ row_limit }} results.
+    {% endif %}
+</div>
 <table id="results_table" class="table">
     <thead>
         <tr>
+            <th>Select</th>
             <th>Include</th>
             <th>Category</th>
             <th>Year</th>
@@ -19,6 +27,7 @@
     <tbody>
         {% for i, row in rows.iterrows %}
             <tr id="r_{{ i }}">
+                <td><input type='checkbox' id='c_{{ i }}' onchange='handleCheckbox(this)'/></td>
                 <td>{{ row.tj_inclusion_name }}</td>
                 <td>{{ row.tj_category_name }}</td>
                 <td>{{ row.year }}</td>

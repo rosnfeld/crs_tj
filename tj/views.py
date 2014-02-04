@@ -242,4 +242,4 @@ def query_results_new(request):
 
     rows = query_processor.get_matching_rows_for_query_new(query)
 
-    return render(request, 'tj/query_results.html', {'rows': rows})
+    return render(request, 'tj/query_results.html', {'rows': rows, 'row_limit': query_processor.ROW_LIMIT})

@@ -30,7 +30,7 @@
             return results;
         }
 
-        function refreshTable() {
+        function refreshResults() {
             // redo this as jQuery?
             var search_terms = document.getElementById('query_text').value;
 
@@ -49,7 +49,7 @@
                 contentType: "application/json; charset=utf-8",
 
                 success: function (html) {
-                    $("#table_holder").html(html);
+                    $("#results_holder").html(html);
                 },
 
                 error: function (xhr, status) {
@@ -101,7 +101,7 @@
             <br/>
             <div class="input-group">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" onclick="refreshTable()">
+                    <button class="btn btn-default" type="button" onclick="refreshResults()">
                         <span class="glyphicon glyphicon-search"></span>
                         Run Query
                     </button>
@@ -109,8 +109,7 @@
             </div>
         </div>
     </div>
-    <div id="message_holder"></div>
-    <div id="table_holder"></div>
+    <div id="results_holder"></div>
     <div id="modal_holder">
         {% for filter_type, filter_rows in code_filter_map.items %}
         <div class="modal fade" id="modal_filter_{{ filter_type }}" tabindex="-1">
