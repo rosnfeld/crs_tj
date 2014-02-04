@@ -55,7 +55,7 @@ def execute_query(query_text, code_filters):
 
     limit_clause = 'ORDER BY crs.crs_pk LIMIT 25;'
 
-    return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, params=params)
+    return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, index_col="crs_pk", params=params)
 
 
 def get_matching_rows_for_query_new(query_params):
