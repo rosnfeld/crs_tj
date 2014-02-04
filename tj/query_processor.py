@@ -53,7 +53,7 @@ def execute_query(query_text, code_filters):
         # could use sql params here but ints are pretty safe to just write in explicitly
         where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
 
-    limit_clause = 'LIMIT 100;'
+    limit_clause = 'ORDER BY crs.crs_pk LIMIT 100;'
 
     return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, params=params)
 
