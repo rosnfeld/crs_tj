@@ -83,26 +83,29 @@
     </ol>
     <div class="panel panel-default">
         <div class="panel-body">
-            <div class="form-group">
-                <label for="query_text">Query</label>
-                <input type="text" id="query_text" value="" class="form-control" placeholder="search terms">
+            <div class="row">
+                <label for="query_text" class="col-md-1">Query</label>
+                <div class="col-md-7">
+                    <input type="text" id="query_text" value="" class="form-control" placeholder="search terms">
+                </div>
             </div>
-            <label>Filters</label>
-            <div>
-                {% for filter_type in code_filter_types %}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
-                                onclick="editFilter('{{ filter_type }}')">
-                            {{ filter_type|title }} <span class="caret"></span>
-                        </button>
-                    </div>
-                {% endfor %}
+            <div class="row top-buffer">
+                <label class="col-md-1">Filters</label>
+                <div class="col-md-8">
+                    {% for filter_type in code_filter_types %}
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
+                                    onclick="editFilter('{{ filter_type }}')">
+                                {{ filter_type|title }} <span class="caret"></span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-default" type="button" onclick="refreshResults()">
+                    <span class="glyphicon glyphicon-search"></span>
+                    Run Query
+                </button>
             </div>
-            <br/>
-            <button class="btn btn-default" type="button" onclick="refreshResults()">
-                <span class="glyphicon glyphicon-search"></span>
-                Run Query
-            </button>
         </div>
     </div>
     <div id="results_holder"></div>
