@@ -1,9 +1,49 @@
-<div>
+<div id="results_message" class="panel panel-default">
+    <div class="panel-body">
     {% if rows.shape.0 < row_limit %}
         Returned {{ rows.shape.0 }} (all) results.
     {% else %}
         Returned the maximum limit of {{ row_limit }} results.
     {% endif %}
+    </div>
+</div>
+<div id="results_controls" class="panel panel-default">
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-2">
+                <input type='checkbox' id='check_all_none'/>
+                <label for="all_none">Select All/None</label>
+                <script>
+                    $('#check_all_none').click(function () {
+                        if ($(this).is(':checked')) {
+                            $('.others').prop("checked", true);
+                        }
+                        else {
+                            $('.others').removeAttr("checked");
+                        }
+                    });
+                </script>
+            </div>
+            <div class="col-md-3">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" id="drop_inclusion" onclick="TODO">
+                        Inclusion <span class="caret"></span>
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" id="drop_category" onclick="TODO">
+                        Category <span class="caret"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-default" type="button" onclick="TODO">
+                    <span class="glyphicon glyphicon-floppy-save"></span>
+                    Commit Analysis
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 <table id="results_table" class="table">
     <thead>
@@ -27,7 +67,7 @@
     <tbody>
         {% for i, row in rows.iterrows %}
             <tr id="r_{{ i }}">
-                <td><input type='checkbox' id='c_{{ i }}' onchange='handleCheckbox(this)'/></td>
+                <td><input type='checkbox' id='c_{{ i }}' class="others"/></td>
                 <td>{{ row.tj_inclusion_name }}</td>
                 <td>{{ row.tj_category_name }}</td>
                 <td>{{ row.year }}</td>
