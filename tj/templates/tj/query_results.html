@@ -14,17 +14,28 @@
         return results;
     }
 
-    function applyInclusionToSelected(inclusion_id) {
+    function applyInclusionToSelected(inclusion_id, inclusion_name) {
         var crs_pks = getAllSelectedRowIDs();
         for (var i = 0; i < crs_pks.length; i++) {
-            inclusionActions[crs_pks[i]] = inclusion_id;
+            var crs_pk = crs_pks[i];
+            inclusionActions[crs_pk] = inclusion_id;
+
+            var inclusion_text = $('#incl_' + crs_pk);
+            inclusion_text.addClass('modified');
+            inclusion_text.html(inclusion_name);
+
         }
     }
 
-    function applyCategoryToSelected(category_id) {
+    function applyCategoryToSelected(category_id, category_name) {
         var crs_pks = getAllSelectedRowIDs();
         for (var i = 0; i < crs_pks.length; i++) {
-            categoryActions[crs_pks[i]] = category_id;
+            var crs_pk = crs_pks[i];
+            categoryActions[crs_pk] = category_id;
+
+            var category_text = $('#cat_' + crs_pk);
+            category_text.addClass('modified');
+            category_text.html(category_name);
         }
     }
 
@@ -79,7 +90,7 @@
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         {% for i, inclusion_row in inclusions.iterrows %}
-                        <li><a onclick="applyInclusionToSelected('{{ inclusion_row.tj_inclusion_id }}')">
+                        <li><a onclick="applyInclusionToSelected('{{ inclusion_row.tj_inclusion_id }}', '{{ inclusion_row.tj_inclusion_name }}')">
                             {{ inclusion_row.tj_inclusion_name }}</a></li>
                         {% endfor %}
                     </ul>
@@ -90,7 +101,7 @@
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         {% for i, category_row in categories.iterrows %}
-                        <li><a onclick="applyCategoryToSelected('{{ category_row.tj_category_id }}')">
+                        <li><a onclick="applyCategoryToSelected('{{ category_row.tj_category_id }}', '{{ category_row.tj_category_name }}')">
                             {{category_row.tj_category_name|truncatechars:25 }}</a></li>
                         {% endfor %}
                     </ul>
@@ -128,8 +139,8 @@
         {% for i, row in rows.iterrows %}
             <tr id="r_{{ i }}">
                 <td><input type='checkbox' id='c_{{ i }}' class="others"/></td>
-                <td>{{ row.tj_inclusion_name }}</td>
-                <td>{{ row.tj_category_name }}</td>
+                <td id="incl_{{ i }}">{{ row.tj_inclusion_name }}</td>
+                <td id="cat_{{ i }}">{{ row.tj_category_name }}</td>
                 <td>{{ row.year }}</td>
                 <td>{{ row.recipientname }}</td>
                 <td>{{ row.donorname }}</td>

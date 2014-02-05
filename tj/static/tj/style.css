@@ -7,3 +7,7 @@ table {
 }
 
 .top-buffer { margin-top:10px; }
+
+.modified {
+    color: #3501f0;
+}
