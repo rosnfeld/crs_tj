@@ -26,14 +26,24 @@
             </div>
             <div class="col-md-3">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" id="drop_inclusion" onclick="TODO">
+                    <button type="button" class="btn btn-default dropdown-toggle" id="drop_inclusion" data-toggle="dropdown">
                         Set Inclusion <span class="caret"></span>
                     </button>
+                    <ul class="dropdown-menu" role="menu">
+                        {% for i, inclusion_row in inclusions.iterrows %}
+                        <li>{{ inclusion_row.tj_inclusion_name }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-default dropdown-toggle" id="drop_category" onclick="TODO">
+                    <button type="button" class="btn btn-default dropdown-toggle" id="drop_category" data-toggle="dropdown">
                         Set Category <span class="caret"></span>
                     </button>
+                    <ul class="dropdown-menu" role="menu">
+                        {% for i, category_row in categories.iterrows %}
+                        <li>{{ category_row.tj_category_name|truncatechars:25 }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
             <div class="col-md-2">

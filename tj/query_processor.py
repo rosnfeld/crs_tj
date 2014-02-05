@@ -1,7 +1,7 @@
 import pandas as pd
 import StringIO
 import collections
-from django.db import connection
+from django.db import connection as CONNECTION
 
 BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
            'sector.sectorname, purpose.purposename, agency.agencyname, ' \
@@ -57,7 +57,7 @@ def execute_query(query_text, code_filters):
 
     limit_clause = 'ORDER BY crs.crs_pk LIMIT {row_limit};'.format(row_limit=ROW_LIMIT)
 
-    return pd.read_sql(BASE_SQL + where_clause + limit_clause, connection, index_col="crs_pk", params=params)
+    return pd.read_sql(BASE_SQL + where_clause + limit_clause, CONNECTION, index_col="crs_pk", params=params)
 
 
 def get_matching_rows_for_query_new(query_params):
@@ -117,14 +117,32 @@ def convert_to_csv_string_for_export(dataframe):
     return stringio.getvalue()
 
 
+def get_all_rows_from_table(tablename):
+    return pd.read_sql('SELECT * FROM ' + tablename + ';', CONNECTION)
+    
+
 def get_all_name_code_pairs(filtertype):
     """
     Returns a dataframe containing ___code/___name pairs.
     """
-    rows = pd.read_sql('SELECT * FROM ' + filtertype + ';', connection)
+    rows = get_all_rows_from_table(filtertype)
 
     code_column = filtertype + 'code'
     name_column = filtertype + 'name'
     rows = rows.sort(name_column)
 
     return rows.rename(columns={code_column: 'code', name_column: 'name'})
+
+
+def get_all_inclusion_rows():
+    """
+    Returns a dataframe of the tj_inclusion table.
+    """
+    return get_all_rows_from_table('tj_inclusion')
+
+
+def get_all_category_rows():
+    """
+    Returns a dataframe of the tj_category table.
+    """
+    return get_all_rows_from_table('tj_category')

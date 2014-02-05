@@ -240,6 +240,9 @@ def query_results_new(request):
         for code in codes:
             query.add_code_filter(filter_type, code)
 
-    rows = query_processor.get_matching_rows_for_query_new(query)
+    result_rows = query_processor.get_matching_rows_for_query_new(query)
+    inclusions = query_processor.get_all_inclusion_rows()
+    categories = query_processor.get_all_category_rows()
 
-    return render(request, 'tj/query_results.html', {'rows': rows, 'row_limit': query_processor.ROW_LIMIT})
+    return render(request, 'tj/query_results.html', {'rows': result_rows, 'row_limit': query_processor.ROW_LIMIT,
+                                                     'inclusions': inclusions, 'categories': categories})
