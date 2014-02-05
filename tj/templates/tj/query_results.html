@@ -1,3 +1,51 @@
+<script>
+    var inclusionActions = {};
+    var categoryActions = {};
+
+    function getAllSelectedRowIDs() {
+        var results = [];
+        var selector = 'input:checkbox[id^="c_"]:checked';
+        $(selector).each(function (index, item) {
+            var checkbox_id = $(this).attr('id');
+            var crs_pk = checkbox_id.substring(checkbox_id.lastIndexOf('_') + 1);
+            results.push(crs_pk);
+        });
+
+        return results;
+    }
+
+    function applyInclusionToSelected(inclusion_id) {
+        var crs_pks = getAllSelectedRowIDs();
+        for (var i = 0; i < crs_pks.length; i++) {
+            inclusionActions[crs_pks[i]] = inclusion_id;
+        }
+    }
+
+    function applyCategoryToSelected(category_id) {
+        var crs_pks = getAllSelectedRowIDs();
+        for (var i = 0; i < crs_pks.length; i++) {
+            categoryActions[crs_pks[i]] = category_id;
+        }
+    }
+
+    function commitActions() {
+        $.ajax({
+            url: "{% url 'query_commit_analysis' %}",
+
+            type: "POST",
+
+            data: JSON.stringify({inclusionActions: inclusionActions, categoryActions: categoryActions}),
+
+            contentType: "application/json; charset=utf-8",
+
+            success: refreshResults,
+
+            error: function (xhr, status) {
+                alert("Failed to commit analyzed rows");
+            }
+        });
+    }
+</script>
 <div id="results_message" class="panel panel-default">
     <div class="panel-body">
     {% if rows.shape.0 < row_limit %}
@@ -31,7 +79,8 @@
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         {% for i, inclusion_row in inclusions.iterrows %}
-                        <li>{{ inclusion_row.tj_inclusion_name }}</li>
+                        <li><a onclick="applyInclusionToSelected('{{ inclusion_row.tj_inclusion_id }}')">
+                            {{ inclusion_row.tj_inclusion_name }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -41,13 +90,14 @@
                     </button>
                     <ul class="dropdown-menu" role="menu">
                         {% for i, category_row in categories.iterrows %}
-                        <li>{{ category_row.tj_category_name|truncatechars:25 }}</li>
+                        <li><a onclick="applyCategoryToSelected('{{ category_row.tj_category_id }}')">
+                            {{category_row.tj_category_name|truncatechars:25 }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-default" type="button" onclick="TODO">
+                <button class="btn btn-default" type="button" onclick="commitActions()">
                     <span class="glyphicon glyphicon-floppy-save"></span>
                     Commit Analysis
                 </button>

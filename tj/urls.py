@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     url(r'^query/(?P<query_id>\d+)/filter_update/(?P<filter_type>\w+)', views.query_filter_update, name='query_filter_update'),
     url(r'^query/build', views.query_build, name='query_build'),
     url(r'^query/results', views.query_results_new, name='query_results_new'),
+    url(r'^query/commit_analysis', views.commit_analysis, name='query_commit_analysis'),
 
     url(r'^combo/?$', views.combos_home, name='combos_home'),
     url(r'^combo/create$', views.combo_create, name='combo_create'),

@@ -146,3 +146,27 @@ def get_all_category_rows():
     Returns a dataframe of the tj_category table.
     """
     return get_all_rows_from_table('tj_category')
+
+
+def updateInclusions(inclusionActions):
+    sql = 'UPDATE crs SET tj_inclusion_id=%(tj_inclusion_id)s WHERE crs_pk=%(crs_pk)s;'
+
+    cursor = CONNECTION.cursor()
+
+    for crs_pk, tj_inclusion_id in inclusionActions.iteritems():
+        cursor.execute(sql, {'tj_inclusion_id': tj_inclusion_id, 'crs_pk': crs_pk})
+
+    CONNECTION.commit()
+    cursor.close()
+
+
+def updateCategories(categoryActions):
+    sql = 'UPDATE crs SET tj_category_id=%(tj_category_id)s WHERE crs_pk=%(crs_pk)s;'
+
+    cursor = CONNECTION.cursor()
+
+    for crs_pk, tj_category_id in categoryActions.iteritems():
+        cursor.execute(sql, {'tj_category_id': tj_category_id, 'crs_pk': crs_pk})
+
+    CONNECTION.commit()
+    cursor.close()

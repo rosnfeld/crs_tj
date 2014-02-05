@@ -246,3 +246,14 @@ def query_results_new(request):
 
     return render(request, 'tj/query_results.html', {'rows': result_rows, 'row_limit': query_processor.ROW_LIMIT,
                                                      'inclusions': inclusions, 'categories': categories})
+
+
+def commit_analysis(request):
+    payload = request.read()
+    json_payload = json.loads(payload)
+
+    # TODO this argues for a better name than "query processor" - really it's now more of a db_access_layer
+    query_processor.updateInclusions(json_payload['inclusionActions'])
+    query_processor.updateCategories(json_payload['categoryActions'])
+
+    return HttpResponse('OK')
