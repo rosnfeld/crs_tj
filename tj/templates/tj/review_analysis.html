@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Review Analyzed Rows</title>
+    {% include 'tj/header_includes.html' %}
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <h3>Review Analyzed Rows</h3>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <p>
+                There will be some summary statistics here, like a cross-tab of item counts and total 2011 USD disbursed
+                across definitely-included, maybe-included items vs the various TJ categories.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <p>
+                You will also be able to review already-classified rows using an interface similar to the query results,
+                so you can amend classifications or inclusion status.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <p>
+                <a href="{% url 'export_csv' %}">Export all possibly-TJ-related data to CSV</a>
+            </p>
+        </div>
+    </div>
+    <hr/>
+    <div class="row">
+        <ol class="breadcrumb">
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li class="active">Review Analysis</li>
+        </ol>
+    </div>
+</div>
+</body>
+</html>

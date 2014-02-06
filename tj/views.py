@@ -270,3 +270,13 @@ def export_csv(request):
     response['Content-Disposition'] = 'attachment; filename="CRS_TJ_{timestamp}.csv"'.format(timestamp=timestamp_string)
 
     return response
+
+
+def review_analysis(request):
+    # TODO a data table with marginals... maybe use pandas crosstab?
+    # Count by inclusion, category
+    # USD disbursed defl by inclusion, category
+
+    # TODO also include nulls in this categorization?
+
+    return render(request, 'tj/review_analysis.html', {})
