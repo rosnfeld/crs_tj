@@ -21,6 +21,7 @@ BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.chan
            'LEFT OUTER JOIN tj_category ON (crs.tj_category_id = tj_category.tj_category_id) '
 
 ROW_LIMIT = 25
+NO_ROW_LIMIT = 10000000
 
 CSV_COLUMNS = [
     'tj_inclusion_name',
@@ -168,10 +169,23 @@ def get_matching_rows_for_combo(combo):
     return rows
 
 
-def get_analyzed_rows():
-    # TODO take params of some sort to control yes vs maybe rows?
-    # ignore categorized but otherwise unknown inclusion rows for now?
-    where_clause = 'WHERE crs.tj_inclusion_id > 0 '
+def get_tj_dataset_rows():
+    where_clause = 'WHERE (crs.tj_inclusion_id > 0) '
+    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+
+
+def get_included_but_uncategorized_rows():
+    where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id is NULL)) '
+    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+
+
+def get_categorized_but_no_inclusion_decision_rows():
+    where_clause = 'WHERE ((crs.tj_inclusion_id is NULL) AND (crs.tj_category_id IS NOT NULL)) '
+    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+
+
+def get_excluded_rows():
+    where_clause = 'WHERE (crs.tj_inclusion_id = 0) '
     return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
 
 

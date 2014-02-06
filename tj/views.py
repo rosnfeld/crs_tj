@@ -231,6 +231,14 @@ def query_build(request):
                   {'code_filter_types': CODE_FILTER_TYPES, 'code_filter_map': code_filter_map})
 
 
+def show_results(request, result_rows, row_limit):
+    inclusions = query_processor.get_all_inclusion_rows()
+    categories = query_processor.get_all_category_rows()
+
+    return render(request, 'tj/query_results.html', {'rows': result_rows, 'row_limit': row_limit,
+                                                     'inclusions': inclusions, 'categories': categories})
+
+
 def query_results_new(request):
     payload = request.read()
     json_payload = json.loads(payload)
@@ -242,11 +250,8 @@ def query_results_new(request):
             query.add_code_filter(filter_type, code)
 
     result_rows = query_processor.get_matching_rows_for_query_new(query)
-    inclusions = query_processor.get_all_inclusion_rows()
-    categories = query_processor.get_all_category_rows()
 
-    return render(request, 'tj/query_results.html', {'rows': result_rows, 'row_limit': query_processor.ROW_LIMIT,
-                                                     'inclusions': inclusions, 'categories': categories})
+    return show_results(request, result_rows, query_processor.ROW_LIMIT)
 
 
 def commit_analysis(request):
@@ -261,7 +266,7 @@ def commit_analysis(request):
 
 
 def export_csv(request):
-    dataframe = query_processor.get_analyzed_rows()
+    dataframe = query_processor.get_tj_dataset_rows()
     csv_text = query_processor.convert_to_csv_string_for_export(dataframe)
 
     timestamp_string = datetime.datetime.utcnow().isoformat()
@@ -280,3 +285,40 @@ def review_analysis(request):
     # TODO also include nulls in this categorization?
 
     return render(request, 'tj/review_analysis.html', {})
+
+
+def review_tj_dataset(request):
+    return render(request, 'tj/review_dataset.html',
+                  {'title': 'Review TJ Dataset', 'results_url': reverse('review_tj_dataset_results')})
+
+
+def review_tj_dataset_results(request):
+    return show_results(request, query_processor.get_tj_dataset_rows(), query_processor.NO_ROW_LIMIT)
+
+
+def review_excluded(request):
+    return render(request, 'tj/review_dataset.html',
+                  {'title': 'Review Excluded Results', 'results_url': reverse('review_excluded_results')})
+
+
+def review_excluded_results(request):
+    return show_results(request, query_processor.get_excluded_rows(), query_processor.NO_ROW_LIMIT)
+
+
+def review_uncategorized(request):
+    return render(request, 'tj/review_dataset.html',
+                  {'title': 'Review Uncategorized Results', 'results_url': reverse('review_uncategorized_results')})
+
+
+def review_uncategorized_results(request):
+    return show_results(request, query_processor.get_included_but_uncategorized_rows(), query_processor.NO_ROW_LIMIT)
+
+
+def review_unincluded(request):
+    return render(request, 'tj/review_dataset.html',
+                  {'title': 'Review Unincluded Results', 'results_url': reverse('review_unincluded_results')})
+
+
+def review_unincluded_results(request):
+    return show_results(request, query_processor.get_categorized_but_no_inclusion_decision_rows(),
+                        query_processor.NO_ROW_LIMIT)

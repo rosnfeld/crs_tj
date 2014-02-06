@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    {% include 'tj/header_includes.html' %}
+    <script>
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            crossDomain: false, // obviates need for sameOrigin test
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
+                }
+            }
+        });
+
+        function refreshResults() {
+            $.ajax({
+                url: "{{ results_url }}",
+
+                type: "GET",
+
+                success: function (html) {
+                    $("#results_holder").html(html);
+                },
+
+                error: function (xhr, status) {
+                    alert("Failed to process query results");
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            refreshResults();
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <ol class="breadcrumb">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'review_analysis' %}">Review Analyzed Rows</a></li>
+        <li class="active">{{ title }}</li>
+    </ol>
+    <div id="results_holder"></div>
+</div>
+</body>
+</html>

@@ -12,31 +12,41 @@
     <div class="row">
         <div class="col-md-8">
             <p>
-                There will be some summary statistics here, like a cross-tab of item counts and total 2011 USD disbursed
+                There will eventually be some summary statistics here, like a cross-tab of item counts and total 2011 USD disbursed
                 across definitely-included, maybe-included items vs the various TJ categories.
             </p>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-8">
-            <p>
-                You will also be able to review already-classified rows using an interface similar to the query results,
-                so you can amend classifications or inclusion status.
-            </p>
+    <div class="row top-buffer">
+        <div class="col-md-4">
+            <a href="{% url 'review_tj_dataset' %}">Review TJ dataset</a>
         </div>
     </div>
-    <div class="row">
+    <div class="row top-buffer">
         <div class="col-md-4">
-            <p>
-                <a href="{% url 'export_csv' %}">Export all possibly-TJ-related data to CSV</a>
-            </p>
+            <a href="{% url 'review_uncategorized' %}">Review included but uncategorized data</a>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-4">
+            <a href="{% url 'review_unincluded' %}">Review categorized data with no inclusion decision</a>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-4">
+            <a href="{% url 'review_excluded' %}">Review all manually excluded data</a>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-4">
+            <a href="{% url 'export_csv' %}">Export TJ dataset to CSV</a>
         </div>
     </div>
     <hr/>
     <div class="row">
         <ol class="breadcrumb">
           <li><a href="{% url 'home' %}">Home</a></li>
-          <li class="active">Review Analysis</li>
+          <li class="active">Review Analyzed Rows</li>
         </ol>
     </div>
 </div>
