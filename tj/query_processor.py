@@ -106,6 +106,9 @@ def execute_query(query_text, code_filters):
     where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
     params = [query_text]
 
+    # only include results for which we haven't made an inclusion decision
+    where_clause += ' AND crs.tj_inclusion_id IS NULL '
+
     # group codes by filter type
     codes_per_filter_type = collections.defaultdict(list)
     for code_filter in code_filters:
@@ -175,12 +178,12 @@ def get_tj_dataset_rows():
 
 
 def get_included_but_uncategorized_rows():
-    where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id is NULL)) '
+    where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id IS NULL)) '
     return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
 
 
 def get_categorized_but_no_inclusion_decision_rows():
-    where_clause = 'WHERE ((crs.tj_inclusion_id is NULL) AND (crs.tj_category_id IS NOT NULL)) '
+    where_clause = 'WHERE ((crs.tj_inclusion_id IS NULL) AND (crs.tj_category_id IS NOT NULL)) '
     return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
 
 
