@@ -220,6 +220,15 @@ def index_crs_table(cursor):
         index_sql = code_index_template.format(**name_map)
         cursor.execute(index_sql)
 
+    # also index the custom columns as they will be important for filtering
+    # note these indices are on the only non-static data (maybe need to be rebuilt if ever used heavily?)
+    custom_index_sql_template = 'CREATE INDEX {index_name} ON crs ({custom_column});'
+    for custom_column in (INCLUSION_COLUMN_NAME, CATEGORY_COLUMN_NAME):
+        name_map = {'index_name': 'crs_' + custom_column + '_idx', 'custom_column': custom_column}
+        custom_index_sql = custom_index_sql_template.format(**name_map)
+        cursor.execute(custom_index_sql)
+
+
     # Add a special column to crs just for text search, then index it.
 
     alter_sql = 'ALTER TABLE crs ADD COLUMN searchable_text tsvector;'
