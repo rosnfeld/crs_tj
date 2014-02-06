@@ -5,6 +5,7 @@ from tj.models import Query, QueryCombination, CODE_FILTER_TYPES
 
 import query_processor
 import json
+import datetime
 
 
 def index(request):
@@ -257,3 +258,15 @@ def commit_analysis(request):
     query_processor.updateCategories(json_payload['categoryActions'])
 
     return HttpResponse('OK')
+
+
+def export_csv(request):
+    dataframe = query_processor.get_analyzed_rows()
+    csv_text = query_processor.convert_to_csv_string_for_export(dataframe)
+
+    timestamp_string = datetime.datetime.utcnow().isoformat()
+
+    response = HttpResponse(csv_text, content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="CRS_TJ_{timestamp}.csv"'.format(timestamp=timestamp_string)
+
+    return response

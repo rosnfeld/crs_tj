@@ -29,4 +29,6 @@ urlpatterns = patterns('',
     url(r'^combo/(?P<combo_id>\d+)/run_json', views.combo_run_json, name='combo_run_json'),
     url(r'^combo/(?P<combo_id>\d+)/export_csv', views.combo_export_csv, name='combo_export_csv'),
     url(r'^combo/(?P<combo_id>\d+)/delete', views.combo_delete, name='combo_delete'),
+
+    url(r'^export_csv', views.export_csv, name='export_csv'),
 )
