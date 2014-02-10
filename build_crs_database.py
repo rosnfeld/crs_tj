@@ -174,7 +174,8 @@ def build_custom_data_tables(cursor):
     cursor.execute(category_insert_sql, {'tj_category_id': 2, 'tj_category_name': 'Criminal justice'})
     cursor.execute(category_insert_sql, {'tj_category_id': 3, 'tj_category_name': 'Reparations'})
     cursor.execute(category_insert_sql, {'tj_category_id': 4, 'tj_category_name': 'Institutional reform'})
-    cursor.execute(category_insert_sql, {'tj_category_id': 5, 'tj_category_name': 'General reconciliation work'})
+    cursor.execute(category_insert_sql, {'tj_category_id': 5, 'tj_category_name': 'Reconciliation'})
+    cursor.execute(category_insert_sql, {'tj_category_id': 6, 'tj_category_name': 'General TJ'})
     # and if we ever come up with other categories, we can add them here
 
     category_index_sql = "CREATE UNIQUE INDEX on tj_category (" + CATEGORY_COLUMN_NAME + ");"
