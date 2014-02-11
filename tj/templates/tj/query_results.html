@@ -151,8 +151,30 @@
                 <td>{{ row.purposename }}</td>
                 <td>{{ row.projecttitle }}</td>
                 <td>{{ row.shortdescription }}</td>
-                <td>{{ row.longdescription }}</td>
+                <td class="long_text">{{ row.longdescription }}</td>
             </tr>
         {% endfor %}
     </tbody>
+    <script>
+        $('.long_text').each(function() {
+            var cell = $(this);
+            var original_content = cell.html();
+
+            var max_characters = 80;
+            var ellipsis = '&hellip;';
+            var truncated_length = max_characters + ellipsis.length;
+
+            if (original_content.length > truncated_length) {
+                var truncated_content = original_content.substr(0, max_characters) + ellipsis;
+                cell.html(truncated_content);
+                cell.click(function() {
+                    if (cell.html().length > truncated_length) {
+                        cell.html(truncated_content);
+                    } else {
+                        cell.html(original_content);
+                    }
+                })
+            }
+        })
+    </script>
 </table>
