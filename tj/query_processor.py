@@ -1,7 +1,7 @@
 import pandas as pd
 import StringIO
 import collections
-from django.db import connection as CONNECTION
+import django.db
 
 BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
            'sector.sectorname, purpose.purposename, agency.agencyname, ' \
@@ -101,6 +101,12 @@ class QueryParams(object):
         self.code_filters.append(CodeFilterParams(filter_type, code))
 
 
+def get_db_connection():
+    django.db.close_old_connections()  # otherwise it seems our connections are going stale?
+
+    return django.db.connection
+
+
 def execute_query(query_text, code_filters):
     # we will want to revisit plainto_tsquery to provide fancier searching, but not at this phase
     where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
@@ -127,7 +133,7 @@ def execute_query(query_text, code_filters):
 
     limit_clause = 'ORDER BY crs.crs_pk LIMIT {row_limit};'.format(row_limit=ROW_LIMIT)
 
-    return pd.read_sql(BASE_SQL + where_clause + limit_clause, CONNECTION, index_col="crs_pk", params=params)
+    return pd.read_sql(BASE_SQL + where_clause + limit_clause, get_db_connection(), index_col="crs_pk", params=params)
 
 
 def get_matching_rows_for_query_new(query_params):
@@ -174,22 +180,22 @@ def get_matching_rows_for_combo(combo):
 
 def get_tj_dataset_rows():
     where_clause = 'WHERE (crs.tj_inclusion_id > 0) '
-    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
 
 
 def get_included_but_uncategorized_rows():
     where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id IS NULL)) '
-    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
 
 
 def get_categorized_but_no_inclusion_decision_rows():
     where_clause = 'WHERE ((crs.tj_inclusion_id IS NULL) AND (crs.tj_category_id IS NOT NULL)) '
-    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
 
 
 def get_excluded_rows():
     where_clause = 'WHERE (crs.tj_inclusion_id = 0) '
-    return pd.read_sql(BASE_SQL + where_clause, CONNECTION, index_col="crs_pk")
+    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
 
 
 def convert_to_csv_string_for_export(dataframe):
@@ -207,7 +213,7 @@ def convert_to_csv_string_for_export(dataframe):
 
 
 def get_all_rows_from_table(tablename):
-    return pd.read_sql('SELECT * FROM ' + tablename + ';', CONNECTION)
+    return pd.read_sql('SELECT * FROM ' + tablename + ';', get_db_connection())
     
 
 def get_all_name_code_pairs(filtertype):
@@ -240,22 +246,24 @@ def get_all_category_rows():
 def updateInclusions(inclusionActions):
     sql = 'UPDATE crs SET tj_inclusion_id=%(tj_inclusion_id)s WHERE crs_pk=%(crs_pk)s;'
 
-    cursor = CONNECTION.cursor()
+    connection = get_db_connection()
+    cursor = connection.cursor()
 
     for crs_pk, tj_inclusion_id in inclusionActions.iteritems():
         cursor.execute(sql, {'tj_inclusion_id': tj_inclusion_id, 'crs_pk': crs_pk})
 
-    CONNECTION.commit()
+    connection.commit()
     cursor.close()
 
 
 def updateCategories(categoryActions):
     sql = 'UPDATE crs SET tj_category_id=%(tj_category_id)s WHERE crs_pk=%(crs_pk)s;'
 
-    cursor = CONNECTION.cursor()
+    connection = get_db_connection()
+    cursor = connection.cursor()
 
     for crs_pk, tj_category_id in categoryActions.iteritems():
         cursor.execute(sql, {'tj_category_id': tj_category_id, 'crs_pk': crs_pk})
 
-    CONNECTION.commit()
+    connection.commit()
     cursor.close()
