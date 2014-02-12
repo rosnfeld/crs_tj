@@ -14,7 +14,8 @@
                 if (!csrfSafeMethod(settings.type)) {
                     xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
                 }
-            }
+            },
+            timeout: 0  // in milliseconds, 0 means "don't time out"
         });
 
         function getSelectedCodesForFilter(filter_type) {
