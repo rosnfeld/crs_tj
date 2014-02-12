@@ -107,17 +107,17 @@ def get_db_connection():
     return django.db.connection
 
 
-def generate_where_clause_and_params_for_query(query_text, code_filters):
+def generate_where_clause_and_params_for_query(query_params):
     # we will want to revisit plainto_tsquery to provide fancier searching, but not at this phase
     where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
-    params = [query_text]
+    params = [query_params.search_terms]
 
     # only include results for which we haven't made an inclusion decision
     where_clause += ' AND crs.tj_inclusion_id IS NULL '
 
     # group codes by filter type
     codes_per_filter_type = collections.defaultdict(list)
-    for code_filter in code_filters:
+    for code_filter in query_params.code_filters:
         codes_per_filter_type[code_filter.filter_type].append(code_filter.code)
 
     # do an OR across all filters of a given filtertype, and then an AND across filter types
@@ -134,8 +134,8 @@ def generate_where_clause_and_params_for_query(query_text, code_filters):
     return where_clause, params
 
 
-def execute_query(query_text, code_filters):
-    where_clause, params = generate_where_clause_and_params_for_query(query_text, code_filters)
+def get_matching_rows_for_query(query_params):
+    where_clause, params = generate_where_clause_and_params_for_query(query_params)
 
     # could possibly accomplish this by only reading however many rows from the cursor?
     # that's likely slower though, and then integrating with pandas might be a pain
@@ -144,12 +144,8 @@ def execute_query(query_text, code_filters):
     return pd.read_sql(BASE_SQL + where_clause + limit_clause, get_db_connection(), index_col="crs_pk", params=params)
 
 
-def get_matching_rows_for_query_new(query_params):
-    return execute_query(query_params.search_terms, query_params.code_filters)
-
-
-def get_count_of_matching_rows_for_query(query_text, code_filters):
-    where_clause, params = generate_where_clause_and_params_for_query(query_text, code_filters)
+def get_count_of_matching_rows_for_query(query_params):
+    where_clause, params = generate_where_clause_and_params_for_query(query_params)
 
     count_sql = 'SELECT count(*) FROM crs ' + where_clause
 
@@ -159,44 +155,6 @@ def get_count_of_matching_rows_for_query(query_text, code_filters):
     cursor.close()
 
     return rowcount
-
-
-def get_matching_rows_for_query(query):
-    rows = execute_query(query.text, query.codefilter_set.all())
-
-    # manual exclusions are now broken, but they are going away anyhow
-
-    # mark manual exclusions
-    rows['excluded'] = False
-    for manual_exclusion in query.manualexclusion_set.all():
-        if manual_exclusion.pandas_row_id in rows.index:
-            rows['excluded'][manual_exclusion.pandas_row_id] = True
-
-    return rows
-
-
-def get_matching_rows_for_combo(combo):
-    results = [get_matching_rows_for_query(query) for query in combo.queries.all()]
-
-    if not results:
-        return pd.DataFrame()
-
-    rows = pd.concat(results)
-
-    # don't worry about excluded rows, we'll apply those manually,
-    # but remove the column so as not to interfere with drop_duplicates
-    del rows["excluded"]
-
-    rows = rows.drop_duplicates()
-
-    # if excluded in one query, row is excluded from the combination
-    rows['excluded'] = False
-    for query in combo.queries.all():
-        for manual_exclusion in query.manualexclusion_set.all():
-            if manual_exclusion.pandas_row_id in rows.index:
-                rows['excluded'][manual_exclusion.pandas_row_id] = True
-
-    return rows
 
 
 def get_tj_dataset_rows():
