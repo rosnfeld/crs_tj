@@ -130,7 +130,6 @@ def apply_purpose_code_filter(dataframe):
 
 
 def apply_country_filter(dataframe):
-    # TODO remove this filter once we have more data compression in place
     desired_countries = ('Cambodia', 'Peru', 'Sierra Leone', 'Guatemala', 'Kenya')
 
     return dataframe[dataframe.recipientname.apply(lambda x: x in desired_countries)]
@@ -170,7 +169,7 @@ def filter_master_file(input_path, output_path):
     master = pd.read_pickle(input_path)
     filtered = apply_purpose_code_filter(master)
     filtered = apply_year_filter(filtered)
-    # filtered = apply_country_filter(filtered)
+    # filtered = apply_country_filter(filtered)  # data reduction for testing
     remove_unnecessary_columns(filtered)
 
     filtered.to_pickle(output_path)
