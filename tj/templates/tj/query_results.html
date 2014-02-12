@@ -119,39 +119,39 @@
 <table id="results_table" class="table table-condensed">
     <thead>
         <tr>
-            <th>Select</th>
-            <th>Include</th>
-            <th>Category</th>
-            <th>Year</th>
-            <th>Recipient</th>
-            <th>Donor</th>
-            <th>Agency</th>
-            <th>Channel</th>
-            <th>USD Disbursed (2011 $M)</th>
-            <th>Sector</th>
-            <th>Purpose</th>
-            <th>Project Title</th>
-            <th>Short Description</th>
-            <th>Long Description</th>
+            <th class="select_col">Select</th>
+            <th class="include_col">Include</th>
+            <th class="category_col">Category</th>
+            <th class="year_col">Year</th>
+            <th class="recipient_col">Recipient</th>
+            <th class="donor_col">Donor</th>
+            <th class="agency_col">Agency</th>
+            <th class="channel_col">Channel</th>
+            <th class="disbursed_col">USD Disbursed (2011 $M)</th>
+            <th class="sector_col">Sector</th>
+            <th class="purpose_col">Purpose</th>
+            <th class="projtitle_col">Project Title</th>
+            <th class="shortdesc_col">Short Description</th>
+            <th class="longdesc_col">Long Description</th>
         </tr>
     </thead>
     <tbody>
         {% for i, row in rows.iterrows %}
             <tr id="r_{{ i }}">
-                <td><input type='checkbox' id='c_{{ i }}' class="result_checkbox"/></td>
-                <td id="incl_{{ i }}">{{ row.tj_inclusion_name }}</td>
-                <td id="cat_{{ i }}">{{ row.tj_category_name }}</td>
-                <td>{{ row.year }}</td>
-                <td>{{ row.recipientname }}</td>
-                <td>{{ row.donorname }}</td>
-                <td>{{ row.agencyname }}</td>
-                <td>{{ row.channelname }}</td>
-                <td>{{ row.usd_disbursement_defl | floatformat:6 }}</td>
-                <td>{{ row.sectorname }}</td>
-                <td>{{ row.purposename }}</td>
-                <td>{{ row.projecttitle }}</td>
-                <td>{{ row.shortdescription }}</td>
-                <td class="long_text">{{ row.longdescription }}</td>
+                <td  class="select_col"><input type='checkbox' id='c_{{ i }}' class="result_checkbox"/></td>
+                <td class="include_col" id="incl_{{ i }}">{{ row.tj_inclusion_name }}</td>
+                <td class="category_col" id="cat_{{ i }}">{{ row.tj_category_name }}</td>
+                <td class="year_col">{{ row.year }}</td>
+                <td class="recipient_col">{{ row.recipientname }}</td>
+                <td class="donor_col">{{ row.donorname }}</td>
+                <td class="agency_col">{{ row.agencyname }}</td>
+                <td class="channel_col">{{ row.channelname }}</td>
+                <td class="disbursed_col">{{ row.usd_disbursement_defl | floatformat:6 }}</td>
+                <td class="sector_col">{{ row.sectorname }}</td>
+                <td class="purpose_col">{{ row.purposename }}</td>
+                <td class="projtitle_col">{{ row.projecttitle }}</td>
+                <td class="shortdesc_col">{{ row.shortdescription }}</td>
+                <td class="longdesc_col long_text">{{ row.longdescription }}</td>
             </tr>
         {% endfor %}
     </tbody>
@@ -160,7 +160,7 @@
             var cell = $(this);
             var original_content = cell.html();
 
-            var max_characters = 80;
+            var max_characters = 300;
             var ellipsis = '&hellip;';
             var truncated_length = max_characters + ellipsis.length;
 

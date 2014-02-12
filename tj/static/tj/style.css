@@ -1,5 +1,11 @@
 table {
     font-size: 82.5%;
+    table-layout: fixed;
+    width: 100%;
+}
+
+td {
+    overflow: hidden;
 }
 
 .filter_active {
@@ -10,4 +16,61 @@ table {
 
 .modified {
     color: #3501f0;
+}
+
+.select_col {
+    width: 3.5em;
+}
+
+.include_col {
+    width: 4.5em;
+}
+
+.category_col {
+    width: 5em;
+}
+
+.year_col {
+    width: 3em;
+}
+
+.recipient_col {
+    width: 6em;
+}
+
+.donor_col {
+    width: 6em;
+}
+
+.agency_col {
+    width: 4.5em;
+}
+
+.channel_col {
+    width: 6em;
+    word-wrap: break-word;
+}
+
+.disbursed_col {
+    width: 6em;
+}
+
+.sector_col {
+    width: 7em;
+}
+
+.purpose_col {
+    width: 7em;
+}
+
+.projtitle_col {
+    width: 10em;
+}
+
+.shortdesc_col {
+    width: 10em;
+}
+
+.longdesc_col {
+    width: 20em;
 }
