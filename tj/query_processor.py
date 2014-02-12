@@ -107,7 +107,7 @@ def get_db_connection():
     return django.db.connection
 
 
-def execute_query(query_text, code_filters):
+def generate_where_clause_and_params_for_query(query_text, code_filters):
     # we will want to revisit plainto_tsquery to provide fancier searching, but not at this phase
     where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
     params = [query_text]
@@ -124,13 +124,21 @@ def execute_query(query_text, code_filters):
     # TODO fancier logic to properly handle agencies
     # TODO fancier logic to handle null channels
     for filter_type, codes in codes_per_filter_type.iteritems():
-        column = filter_type + '.' + filter_type + 'code'
+        column = 'crs.' + filter_type + 'code'
 
         code_strings = [str(code) for code in codes]
 
         # could use sql params here but ints are pretty safe to just write in explicitly
         where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
 
+    return where_clause, params
+
+
+def execute_query(query_text, code_filters):
+    where_clause, params = generate_where_clause_and_params_for_query(query_text, code_filters)
+
+    # could possibly accomplish this by only reading however many rows from the cursor?
+    # that's likely slower though, and then integrating with pandas might be a pain
     limit_clause = 'ORDER BY crs.crs_pk LIMIT {row_limit};'.format(row_limit=ROW_LIMIT)
 
     return pd.read_sql(BASE_SQL + where_clause + limit_clause, get_db_connection(), index_col="crs_pk", params=params)
@@ -138,6 +146,19 @@ def execute_query(query_text, code_filters):
 
 def get_matching_rows_for_query_new(query_params):
     return execute_query(query_params.search_terms, query_params.code_filters)
+
+
+def get_count_of_matching_rows_for_query(query_text, code_filters):
+    where_clause, params = generate_where_clause_and_params_for_query(query_text, code_filters)
+
+    count_sql = 'SELECT count(*) FROM crs ' + where_clause
+
+    cursor = get_db_connection().cursor()
+    cursor.execute(count_sql, params)
+    rowcount = int(cursor.fetchone()[0])
+    cursor.close()
+
+    return rowcount
 
 
 def get_matching_rows_for_query(query):

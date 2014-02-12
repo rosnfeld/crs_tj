@@ -231,12 +231,13 @@ def query_build(request):
                   {'code_filter_types': CODE_FILTER_TYPES, 'code_filter_map': code_filter_map})
 
 
-def show_results(request, result_rows, row_limit):
+def show_results(request, result_rows, row_limit, possible_row_count=None):
     inclusions = query_processor.get_all_inclusion_rows()
     categories = query_processor.get_all_category_rows()
 
-    return render(request, 'tj/query_results.html', {'rows': result_rows, 'row_limit': row_limit,
-                                                     'inclusions': inclusions, 'categories': categories})
+    return render(request, 'tj/query_results.html',
+                  {'rows': result_rows, 'row_limit': row_limit, 'possible_row_count': possible_row_count,
+                   'inclusions': inclusions, 'categories': categories})
 
 
 def query_results_new(request):
@@ -249,9 +250,10 @@ def query_results_new(request):
         for code in codes:
             query.add_code_filter(filter_type, code)
 
+    possible_row_count = query_processor.get_count_of_matching_rows_for_query(query.search_terms, query.code_filters)
     result_rows = query_processor.get_matching_rows_for_query_new(query)
 
-    return show_results(request, result_rows, query_processor.ROW_LIMIT)
+    return show_results(request, result_rows, query_processor.ROW_LIMIT, possible_row_count)
 
 
 def commit_analysis(request):

@@ -62,7 +62,7 @@
     {% if rows.shape.0 < row_limit %}
         Returned {{ rows.shape.0 }} (all) results.
     {% else %}
-        Returned the maximum limit of {{ row_limit }} results.
+        Returned the first {{ row_limit }} out of {{ possible_row_count }} matching results.
     {% endif %}
     </div>
 </div>
