@@ -86,6 +86,7 @@ CSV_COLUMNS = [
     'pba',
     ]
 
+
 class CodeFilterParams(object):
     def __init__(self, filter_type, code):
         self.filter_type = filter_type
@@ -222,26 +223,26 @@ def get_all_category_rows():
     return get_all_rows_from_table('tj_category')
 
 
-def updateInclusions(inclusionActions):
+def update_inclusions(inclusion_actions):
     sql = 'UPDATE crs SET tj_inclusion_id=%(tj_inclusion_id)s WHERE crs_pk=%(crs_pk)s;'
 
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    for crs_pk, tj_inclusion_id in inclusionActions.iteritems():
+    for crs_pk, tj_inclusion_id in inclusion_actions.iteritems():
         cursor.execute(sql, {'tj_inclusion_id': tj_inclusion_id, 'crs_pk': crs_pk})
 
     connection.commit()
     cursor.close()
 
 
-def updateCategories(categoryActions):
+def update_categories(category_actions):
     sql = 'UPDATE crs SET tj_category_id=%(tj_category_id)s WHERE crs_pk=%(crs_pk)s;'
 
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    for crs_pk, tj_category_id in categoryActions.iteritems():
+    for crs_pk, tj_category_id in category_actions.iteritems():
         cursor.execute(sql, {'tj_category_id': tj_category_id, 'crs_pk': crs_pk})
 
     connection.commit()

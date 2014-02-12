@@ -52,8 +52,8 @@ def commit_analysis(request):
     json_payload = json.loads(payload)
 
     # TODO this argues for a better name than "query processor" - really it's now more of a db_access_layer
-    query_processor.updateInclusions(json_payload['inclusionActions'])
-    query_processor.updateCategories(json_payload['categoryActions'])
+    query_processor.update_inclusions(json_payload['inclusionActions'])
+    query_processor.update_categories(json_payload['categoryActions'])
 
     return HttpResponse('OK')
 
