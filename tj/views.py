@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from tj.models import CODE_FILTER_TYPES
 
-import query_processor
+import db_layer
 import json
 import datetime
 
@@ -15,7 +15,7 @@ def index(request):
 def query_build(request):
     code_filter_map = {}
     for filter_type in CODE_FILTER_TYPES:
-        code_filter_map[filter_type] = query_processor.get_all_name_code_pairs(filter_type)
+        code_filter_map[filter_type] = db_layer.get_all_name_code_pairs(filter_type)
 
     return render(request, 'tj/query_builder.html',
                   # pass the types explicitly as list, as order is important
@@ -23,8 +23,8 @@ def query_build(request):
 
 
 def show_results(request, result_rows, row_limit, possible_row_count=None):
-    inclusions = query_processor.get_all_inclusion_rows()
-    categories = query_processor.get_all_category_rows()
+    inclusions = db_layer.get_all_inclusion_rows()
+    categories = db_layer.get_all_category_rows()
 
     return render(request, 'tj/query_results.html',
                   {'rows': result_rows, 'row_limit': row_limit, 'possible_row_count': possible_row_count,
@@ -35,32 +35,31 @@ def query_results(request):
     payload = request.read()
     json_payload = json.loads(payload)
 
-    query = query_processor.QueryParams(json_payload['search_terms'])
+    query = db_layer.QueryParams(json_payload['search_terms'])
 
     for filter_type, codes in json_payload['code_filters'].iteritems():
         for code in codes:
             query.add_code_filter(filter_type, code)
 
-    possible_row_count = query_processor.get_count_of_matching_rows_for_query(query)
-    result_rows = query_processor.get_matching_rows_for_query(query)
+    possible_row_count = db_layer.get_count_of_matching_rows_for_query(query)
+    result_rows = db_layer.get_matching_rows_for_query(query)
 
-    return show_results(request, result_rows, query_processor.ROW_LIMIT, possible_row_count)
+    return show_results(request, result_rows, db_layer.ROW_LIMIT, possible_row_count)
 
 
 def commit_analysis(request):
     payload = request.read()
     json_payload = json.loads(payload)
 
-    # TODO this argues for a better name than "query processor" - really it's now more of a db_access_layer
-    query_processor.update_inclusions(json_payload['inclusionActions'])
-    query_processor.update_categories(json_payload['categoryActions'])
+    db_layer.update_inclusions(json_payload['inclusionActions'])
+    db_layer.update_categories(json_payload['categoryActions'])
 
     return HttpResponse('OK')
 
 
 def export_csv(request):
-    dataframe = query_processor.get_tj_dataset_rows()
-    csv_text = query_processor.convert_to_csv_string_for_export(dataframe)
+    dataframe = db_layer.get_tj_dataset_rows()
+    csv_text = db_layer.convert_to_csv_string_for_export(dataframe)
 
     timestamp_string = datetime.datetime.utcnow().isoformat()
 
@@ -86,7 +85,7 @@ def review_tj_dataset(request):
 
 
 def review_tj_dataset_results(request):
-    return show_results(request, query_processor.get_tj_dataset_rows(), query_processor.NO_ROW_LIMIT)
+    return show_results(request, db_layer.get_tj_dataset_rows(), db_layer.NO_ROW_LIMIT)
 
 
 def review_excluded(request):
@@ -95,7 +94,7 @@ def review_excluded(request):
 
 
 def review_excluded_results(request):
-    return show_results(request, query_processor.get_excluded_rows(), query_processor.NO_ROW_LIMIT)
+    return show_results(request, db_layer.get_excluded_rows(), db_layer.NO_ROW_LIMIT)
 
 
 def review_uncategorized(request):
@@ -104,7 +103,7 @@ def review_uncategorized(request):
 
 
 def review_uncategorized_results(request):
-    return show_results(request, query_processor.get_included_but_uncategorized_rows(), query_processor.NO_ROW_LIMIT)
+    return show_results(request, db_layer.get_included_but_uncategorized_rows(), db_layer.NO_ROW_LIMIT)
 
 
 def review_unincluded(request):
@@ -113,5 +112,5 @@ def review_unincluded(request):
 
 
 def review_unincluded_results(request):
-    return show_results(request, query_processor.get_categorized_but_no_inclusion_decision_rows(),
-                        query_processor.NO_ROW_LIMIT)
+    return show_results(request, db_layer.get_categorized_but_no_inclusion_decision_rows(),
+                        db_layer.NO_ROW_LIMIT)

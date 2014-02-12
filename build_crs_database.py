@@ -75,7 +75,6 @@ def get_db_connection(host, database, user, password):
     return psycopg2.connect(host=host, database=database, user=user, password=password)
 
 
-# duplicated with query_processor.py
 def get_all_name_code_pairs(dataframe, filter_type):
     """
     Returns a dataframe containing ___code/___name pairs.
