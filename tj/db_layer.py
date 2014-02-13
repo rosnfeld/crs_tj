@@ -119,7 +119,7 @@ def convert_to_tsquery(search_terms):
     ts_query = whitespace_pattern.sub(' & ', ts_query)
 
     # convert any leading minus signs into "NOT"
-    minus_pattern = re.compile(' -')  # this means something quite different from the pattern above!
+    minus_pattern = re.compile('(^| )-')  # this means something quite different from the pattern above!
     ts_query = minus_pattern.sub(' !', ts_query)
 
     # convert any trailing asterisks into :*
