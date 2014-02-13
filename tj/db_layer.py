@@ -1,7 +1,9 @@
 import pandas as pd
 import StringIO
 import collections
+import re
 import django.db
+
 
 BASE_SQL = 'SELECT crs.*, recipient.recipientname, donor.donorname, channel.channelname, ' \
            'sector.sectorname, purpose.purposename, agency.agencyname, ' \
@@ -108,10 +110,28 @@ def get_db_connection():
     return django.db.connection
 
 
+def convert_to_tsquery(search_terms):
+    # trim whitespace on either side
+    ts_query = search_terms.strip()
+
+    # internal whitespace becomes "AND"
+    whitespace_pattern = re.compile(' +')
+    ts_query = whitespace_pattern.sub(' & ', ts_query)
+
+    # convert any leading minus signs into "NOT"
+    minus_pattern = re.compile(' -')  # this means something quite different from the pattern above!
+    ts_query = minus_pattern.sub(' !', ts_query)
+
+    # convert any trailing asterisks into :*
+    trailing_asterisk_pattern = re.compile('(\w)\*')
+    ts_query = trailing_asterisk_pattern.sub(r'\1:*', ts_query)
+
+    return ts_query
+
+
 def generate_where_clause_and_params_for_query(query_params):
-    # we will want to revisit plainto_tsquery to provide fancier searching, but not at this phase
-    where_clause = 'WHERE crs.searchable_text @@ plainto_tsquery(%s) '
-    params = [query_params.search_terms]
+    where_clause = 'WHERE crs.searchable_text @@ to_tsquery(%s) '
+    params = [convert_to_tsquery(query_params.search_terms)]
 
     # only include results for which we haven't made an inclusion decision
     where_clause += ' AND crs.tj_inclusion_id IS NULL '
