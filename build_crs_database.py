@@ -175,7 +175,9 @@ def build_custom_data_tables(cursor):
     cursor.execute(category_insert_sql, {'tj_category_id': 4, 'tj_category_name': 'Institutional reform'})
     cursor.execute(category_insert_sql, {'tj_category_id': 5, 'tj_category_name': 'Reconciliation'})
     cursor.execute(category_insert_sql, {'tj_category_id': 6, 'tj_category_name': 'General TJ'})
-    # and if we ever come up with other categories, we can add them here
+    # if we ever come up with other categories, we can add them here
+    # add this as a 'null' category
+    cursor.execute(category_insert_sql, {'tj_category_id': 0, 'tj_category_name': 'None'})
 
     category_index_sql = "CREATE UNIQUE INDEX on tj_category (" + CATEGORY_COLUMN_NAME + ");"
     cursor.execute(category_index_sql)
@@ -189,7 +191,7 @@ def create_crs_table(cursor):
 
     # custom columns
     sql += INCLUSION_COLUMN_NAME + ' smallint REFERENCES tj_inclusion,'
-    sql += CATEGORY_COLUMN_NAME + ' smallint REFERENCES tj_category,'
+    sql += CATEGORY_COLUMN_NAME + ' smallint REFERENCES tj_category DEFAULT 0 NOT NULL,'
 
     # desired columns from CRS file
     column_spec_list = [column_name + ' ' + column_type for column_name, column_type in CRS_COLUMN_SPEC]

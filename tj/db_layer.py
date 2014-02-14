@@ -184,12 +184,12 @@ def get_tj_dataset_rows():
 
 
 def get_included_but_uncategorized_rows():
-    where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id IS NULL)) '
+    where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id = 0)) '
     return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
 
 
 def get_categorized_but_no_inclusion_decision_rows():
-    where_clause = 'WHERE ((crs.tj_inclusion_id IS NULL) AND (crs.tj_category_id IS NOT NULL)) '
+    where_clause = 'WHERE ((crs.tj_inclusion_id IS NULL) AND (crs.tj_category_id != 0)) '
     return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
 
 
