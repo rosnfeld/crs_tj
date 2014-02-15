@@ -1,0 +1,52 @@
+<script>
+    // TODO centralize this and other JavaScript in static file?
+    function style_filter_dropdown(filter_type) {
+        var filter_jquery_object = $('#fb_' + filter_type);
+        if (getSelectedCodesForFilter(filter_type).length > 0) {
+            filter_jquery_object.addClass('filter_active');
+        } else {
+            filter_jquery_object.removeClass('filter_active');
+        }
+    }
+</script>
+{% for filter_type, filter_rows in code_filter_map.items %}
+<div class="modal fade" id="modal_filter_{{ filter_type }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="filter_title">Filter by {{ filter_type|title }}</h4>
+            </div>
+            <div class="modal-body">
+                <em>Select the categories you would like to include.</em>
+                <hr/>
+                <div style="overflow:auto" id="{{ filter_type }}_option_list">
+                    {% for i, row in filter_rows.iterrows %}
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" class="others" id="{{ filter_type }}_{{ row.code }}">
+                                {{ row.name }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <script>
+                    var adjustListSize = function(){
+                        var list_id = '#{{ filter_type }}_option_list';
+                        // this fraction of browser height seems to look good
+                        $(list_id).css({'height': $(window).height() * 0.52});
+                    };
+
+                    $(window).bind("load resize", adjustListSize());
+
+                    adjustListSize();
+                </script>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal"
+                        onclick="style_filter_dropdown('{{ filter_type }}')">Confirm Selections</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
