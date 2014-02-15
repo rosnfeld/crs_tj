@@ -4,19 +4,7 @@
     <title>Query Unanalyzed Data</title>
     {% include 'tj/header_includes.html' %}
     <script>
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
-        $.ajaxSetup({
-            crossDomain: false, // obviates need for sameOrigin test
-            beforeSend: function (xhr, settings) {
-                if (!csrfSafeMethod(settings.type)) {
-                    xhr.setRequestHeader("X-CSRFToken", '{{ csrf_token }}');
-                }
-            },
-            timeout: 0  // in milliseconds, 0 means "don't time out"
-        });
+        initializeAJAX('{{ csrf_token }}');
 
         function getSelectedCodesForFilter(filter_type) {
             var results = [];
