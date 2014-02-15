@@ -84,17 +84,9 @@ def review_tj_dataset(request):
                   {'title': 'Review TJ Dataset', 'results_url': reverse('review_tj_dataset_results')})
 
 
-def review_tj_dataset_results(request):
-    return show_results(request, db_layer.get_tj_dataset_rows(), db_layer.NO_ROW_LIMIT)
-
-
 def review_excluded(request):
     return render(request, 'tj/review_dataset.html',
                   {'title': 'Review Excluded Results', 'results_url': reverse('review_excluded_results')})
-
-
-def review_excluded_results(request):
-    return show_results(request, db_layer.get_excluded_rows(), db_layer.NO_ROW_LIMIT)
 
 
 def review_uncategorized(request):
@@ -102,15 +94,28 @@ def review_uncategorized(request):
                   {'title': 'Review Uncategorized Results', 'results_url': reverse('review_uncategorized_results')})
 
 
-def review_uncategorized_results(request):
-    return show_results(request, db_layer.get_included_but_uncategorized_rows(), db_layer.NO_ROW_LIMIT)
-
-
 def review_unincluded(request):
     return render(request, 'tj/review_dataset.html',
                   {'title': 'Review Unincluded Results', 'results_url': reverse('review_unincluded_results')})
 
 
+def review_results(request, results):
+    shown_results = results.head(db_layer.ROW_LIMIT)
+
+    return show_results(request, shown_results, db_layer.ROW_LIMIT, possible_row_count=len(results))
+
+
+def review_tj_dataset_results(request):
+    return review_results(request, db_layer.get_tj_dataset_rows())
+
+
+def review_excluded_results(request):
+    return review_results(request, db_layer.get_excluded_rows())
+
+
+def review_uncategorized_results(request):
+    return review_results(request, db_layer.get_included_but_uncategorized_rows())
+
+
 def review_unincluded_results(request):
-    return show_results(request, db_layer.get_categorized_but_no_inclusion_decision_rows(),
-                        db_layer.NO_ROW_LIMIT)
+    return review_results(request, db_layer.get_categorized_but_no_inclusion_decision_rows())
