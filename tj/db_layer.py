@@ -129,12 +129,13 @@ def convert_to_tsquery(search_terms):
     return ts_query
 
 
-def generate_where_clause_and_params_for_query(query_params):
-    where_clause = 'WHERE crs.searchable_text @@ to_tsquery(%s) '
-    params = [convert_to_tsquery(query_params.search_terms)]
+def generate_where_clause_and_params(query_params):
+    where_clause = 'WHERE 1=1 '  # throw-away starter clause so that ANDing works
+    params = []
 
-    # only include results for which we haven't made an inclusion decision
-    where_clause += ' AND crs.tj_inclusion_id IS NULL '
+    if query_params.search_terms:
+        where_clause += ' AND crs.searchable_text @@ to_tsquery(%s) '
+        params += [convert_to_tsquery(query_params.search_terms)]
 
     # group codes by filter type
     codes_per_filter_type = collections.defaultdict(list)
@@ -155,8 +156,17 @@ def generate_where_clause_and_params_for_query(query_params):
     return where_clause, params
 
 
+def generate_where_clause_and_params_for_unanalyzed_data(query_params):
+    where_clause, params = generate_where_clause_and_params(query_params)
+
+    # only include results for which we haven't made an inclusion decision
+    where_clause += ' AND crs.tj_inclusion_id IS NULL '
+
+    return where_clause, params
+
+
 def get_matching_rows_for_query(query_params):
-    where_clause, params = generate_where_clause_and_params_for_query(query_params)
+    where_clause, params = generate_where_clause_and_params_for_unanalyzed_data(query_params)
 
     # could possibly accomplish this by only reading however many rows from the cursor?
     # that's likely slower though, and then integrating with pandas might be a pain
@@ -166,7 +176,7 @@ def get_matching_rows_for_query(query_params):
 
 
 def get_count_of_matching_rows_for_query(query_params):
-    where_clause, params = generate_where_clause_and_params_for_query(query_params)
+    where_clause, params = generate_where_clause_and_params_for_unanalyzed_data(query_params)
 
     count_sql = 'SELECT count(*) FROM crs ' + where_clause
 
@@ -178,24 +188,29 @@ def get_count_of_matching_rows_for_query(query_params):
     return rowcount
 
 
-def get_tj_dataset_rows():
-    where_clause = 'WHERE (crs.tj_inclusion_id > 0) '
-    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
+def get_rows_for_analyzed_data(query_params, additional_where_condition):
+    where_clause, params = generate_where_clause_and_params(query_params)
+    where_clause += ' AND ' + additional_where_condition
+
+    order_clause = ' ORDER BY crs.crs_pk;'
+
+    return pd.read_sql(BASE_SQL + where_clause + order_clause, get_db_connection(), index_col="crs_pk", params=params)
 
 
-def get_included_but_uncategorized_rows():
-    where_clause = 'WHERE ((crs.tj_inclusion_id > 0) AND (crs.tj_category_id = 0)) '
-    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
+def get_tj_dataset_rows(query_params):
+    return get_rows_for_analyzed_data(query_params, '(crs.tj_inclusion_id > 0)')
 
 
-def get_categorized_but_no_inclusion_decision_rows():
-    where_clause = 'WHERE ((crs.tj_inclusion_id IS NULL) AND (crs.tj_category_id != 0)) '
-    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
+def get_included_but_uncategorized_rows(query_params):
+    return get_rows_for_analyzed_data(query_params, '((crs.tj_inclusion_id > 0) AND (crs.tj_category_id = 0))')
 
 
-def get_excluded_rows():
-    where_clause = 'WHERE (crs.tj_inclusion_id = 0) '
-    return pd.read_sql(BASE_SQL + where_clause, get_db_connection(), index_col="crs_pk")
+def get_categorized_but_no_inclusion_decision_rows(query_params):
+    return get_rows_for_analyzed_data(query_params, '((crs.tj_inclusion_id IS NULL) AND (crs.tj_category_id != 0))')
+
+
+def get_excluded_rows(query_params):
+    return get_rows_for_analyzed_data(query_params, '(crs.tj_inclusion_id = 0)')
 
 
 def convert_to_csv_string_for_export(dataframe):

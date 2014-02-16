@@ -12,14 +12,24 @@ def index(request):
     return render(request, 'tj/index.html')
 
 
-def query_build(request):
+# consider using a parameters object rather than a map to better manage this complexity?
+def show_query(request, title, results_view, parents, submit_on_load):
     code_filter_map = {}
     for filter_type in CODE_FILTER_TYPES:
         code_filter_map[filter_type] = db_layer.get_all_name_code_pairs(filter_type)
 
     return render(request, 'tj/query_builder.html',
-                  # pass the types explicitly as list, as order is important
-                  {'code_filter_types': CODE_FILTER_TYPES, 'code_filter_map': code_filter_map})
+                  {'title': title,
+                   'results_url': reverse(results_view),
+                   'parents': [(name, reverse(view)) for name, view in parents],
+                   'submit_on_load': submit_on_load,
+                   # pass the types explicitly as list, as order is important
+                   'code_filter_types': CODE_FILTER_TYPES, 'code_filter_map': code_filter_map})
+
+
+def query_build(request):
+    return show_query(request, title='Query Unanalyzed Data', results_view='query_results',
+                      parents=[('Home', 'home')], submit_on_load=False)
 
 
 def show_results(request, result_rows, row_limit, possible_row_count=None):
@@ -79,43 +89,55 @@ def review_analysis(request):
     return render(request, 'tj/review_analysis.html', {})
 
 
+def show_review(request, title, results_view):
+    return show_query(request, title=title, results_view=results_view,
+                      parents=[('Home', 'home'), ('Review Analyzed Rows', 'review_analysis')], submit_on_load=True)
+
+
 def review_tj_dataset(request):
-    return render(request, 'tj/review_dataset.html',
-                  {'title': 'Review TJ Dataset', 'results_url': reverse('review_tj_dataset_results')})
+    return show_review(request, title='Review TJ Dataset', results_view='review_tj_dataset_results')
 
 
 def review_excluded(request):
-    return render(request, 'tj/review_dataset.html',
-                  {'title': 'Review Excluded Results', 'results_url': reverse('review_excluded_results')})
+    return show_review(request, title='Review Excluded Results', results_view='review_excluded_results')
 
 
 def review_uncategorized(request):
-    return render(request, 'tj/review_dataset.html',
-                  {'title': 'Review Uncategorized Results', 'results_url': reverse('review_uncategorized_results')})
+    return show_review(request, title='Review Uncategorized Results', results_view='review_uncategorized_results')
 
 
 def review_unincluded(request):
-    return render(request, 'tj/review_dataset.html',
-                  {'title': 'Review Unincluded Results', 'results_url': reverse('review_unincluded_results')})
+    return show_review(request, title='Review Unincluded Results', results_view='review_unincluded_results')
 
 
-def review_results(request, results):
+def review_results(request, results_function):
+    payload = request.read()
+    json_payload = json.loads(payload)
+
+    query = db_layer.QueryParams(json_payload['search_terms'])
+
+    for filter_type, codes in json_payload['code_filters'].iteritems():
+        for code in codes:
+            query.add_code_filter(filter_type, code)
+
+    results = results_function(query)
+
     shown_results = results.head(db_layer.ROW_LIMIT)
 
     return show_results(request, shown_results, db_layer.ROW_LIMIT, possible_row_count=len(results))
 
 
 def review_tj_dataset_results(request):
-    return review_results(request, db_layer.get_tj_dataset_rows())
+    return review_results(request, db_layer.get_tj_dataset_rows)
 
 
 def review_excluded_results(request):
-    return review_results(request, db_layer.get_excluded_rows())
+    return review_results(request, db_layer.get_excluded_rows)
 
 
 def review_uncategorized_results(request):
-    return review_results(request, db_layer.get_included_but_uncategorized_rows())
+    return review_results(request, db_layer.get_included_but_uncategorized_rows)
 
 
 def review_unincluded_results(request):
-    return review_results(request, db_layer.get_categorized_but_no_inclusion_decision_rows())
+    return review_results(request, db_layer.get_categorized_but_no_inclusion_decision_rows)

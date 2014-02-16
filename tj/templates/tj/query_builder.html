@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Query Unanalyzed Data</title>
+    <title>{{ title }}</title>
     {% include 'tj/header_includes.html' %}
     <script>
         initializeAJAX('{{ csrf_token }}');
@@ -29,7 +29,7 @@
             {% endfor %}
 
             $.ajax({
-                url: "{% url 'query_results' %}",
+                url: "{{ results_url }}",
 
                 type: "POST",
 
@@ -52,14 +52,19 @@
         }
 
         $(document).ready(function() {
+            {% if submit_on_load %}
+            refreshResults();
+            {% endif %}
         });
     </script>
 </head>
 <body>
 <div class="container">
     <ol class="breadcrumb">
-        <li><a href="{% url 'home' %}">Home</a></li>
-        <li class="active">Query Unanalyzed Data</li>
+        {% for parent_name, parent_url in parents %}
+        <li><a href="{{ parent_url }}">{{ parent_name }}</a></li>
+        {% endfor %}
+        <li class="active">{{ title }}</li>
     </ol>
     <div class="panel panel-default">
         <div class="panel-body">
