@@ -59,7 +59,11 @@
 </script>
 <div id="results_message" class="panel panel-default">
     <div class="panel-body">
-        Returned results {{ page.start_index }} to {{page.end_index}} out of {{ page.num_items }} matching results.
+        {%  if page.num_items > 0 %}
+            Returned results {{ page.start_index }} to {{page.end_index}} out of {{ page.num_items }} matching results.
+        {% else %}
+            Returned 0 matching results.
+        {% endif %}
         <button type="button" class="btn btn-default"
                 {% if page.has_prev_page != True %} disabled="disabled" {% endif %}
                 onclick="refreshResults({{ page.prev_page_number }})">

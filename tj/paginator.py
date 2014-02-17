@@ -34,6 +34,9 @@ class PandasPaginator(object):
         self.num_pages = math.ceil(self.num_items/float(count_per_page))
 
     def get_page(self, page_number):
+        if self.data_frame.empty:
+            return PandasPage(self.data_frame, 0, 0, 0, 0)
+
         start_index = page_number * self.count_per_page + 1
         end_index = min(start_index + self.count_per_page - 1, self.num_items)
         data_slice = self.data_frame.iloc[start_index - 1:end_index]
