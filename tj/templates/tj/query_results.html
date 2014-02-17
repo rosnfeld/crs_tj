@@ -56,8 +56,8 @@
                 refreshResults();
             },
 
-            error: function (xhr, status) {
-                alert("Failed to commit analyzed rows");
+            error: function (xhr, textStatus, errorThrown) {
+                alert("Failed to commit analyzed rows: " + textStatus + ", " + errorThrown);
             }
         });
     }

@@ -45,8 +45,8 @@
                     $("#results_holder").html(html);
                 },
 
-                error: function (xhr, status) {
-                    alert("Failed to process query results");
+                error: function (xhr, textStatus, errorThrown) {
+                    alert("Failed to process query results: " + textStatus + ", " + errorThrown);
                 }
             });
         }
