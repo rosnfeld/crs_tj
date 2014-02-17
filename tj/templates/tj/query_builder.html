@@ -19,7 +19,11 @@
             return results;
         }
 
-        function refreshResults() {
+        function refreshResults(page_number) {
+            if (page_number == null) {
+                page_number = 0
+            }
+
             // redo this as jQuery?
             var search_terms = document.getElementById('query_text').value;
 
@@ -33,7 +37,7 @@
 
                 type: "POST",
 
-                data: JSON.stringify({search_terms: search_terms, code_filters: code_filters}),
+                data: JSON.stringify({search_terms: search_terms, code_filters: code_filters, page_number: page_number}),
 
                 contentType: "application/json; charset=utf-8",
 

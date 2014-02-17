@@ -2,8 +2,9 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from tj.models import CODE_FILTER_TYPES
-
 import db_layer
+import paginator
+
 import json
 import datetime
 
@@ -32,13 +33,12 @@ def query_build(request):
                       parents=[('Home', 'home')], submit_on_load=False)
 
 
-def show_results(request, result_rows, row_limit, possible_row_count=None):
+def show_results(request, page):
     inclusions = db_layer.get_all_inclusion_rows()
     categories = db_layer.get_all_category_rows()
 
     return render(request, 'tj/query_results.html',
-                  {'rows': result_rows, 'row_limit': row_limit, 'possible_row_count': possible_row_count,
-                   'inclusions': inclusions, 'categories': categories})
+                  {'page': page, 'inclusions': inclusions, 'categories': categories})
 
 
 def query_results(request):
@@ -54,7 +54,12 @@ def query_results(request):
     possible_row_count = db_layer.get_count_of_matching_rows_for_query(query)
     result_rows = db_layer.get_matching_rows_for_query(query)
 
-    return show_results(request, result_rows, db_layer.ROW_LIMIT, possible_row_count)
+    pandas_paginator = paginator.PandasPaginator(result_rows, db_layer.ROW_LIMIT)
+    pandas_paginator.num_items = possible_row_count  # explicitly set this (a bit of a hack)
+    page = pandas_paginator.get_page(0)
+    page.has_next_page = False  # explicitly disable this
+
+    return show_results(request, page)
 
 
 def commit_analysis(request):
@@ -122,9 +127,12 @@ def review_results(request, results_function):
 
     results = results_function(query)
 
-    shown_results = results.head(db_layer.ROW_LIMIT)
+    pandas_paginator = paginator.PandasPaginator(results, db_layer.ROW_LIMIT)
 
-    return show_results(request, shown_results, db_layer.ROW_LIMIT, possible_row_count=len(results))
+    page_number = int(json_payload['page_number'])
+    page = pandas_paginator.get_page(page_number)
+
+    return show_results(request, page)
 
 
 def review_tj_dataset_results(request):
