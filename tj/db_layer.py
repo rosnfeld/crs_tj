@@ -197,7 +197,7 @@ def get_rows_for_analyzed_data(query_params, additional_where_condition):
     return pd.read_sql(BASE_SQL + where_clause + order_clause, get_db_connection(), index_col="crs_pk", params=params)
 
 
-def get_tj_dataset_rows(query_params):
+def get_tj_dataset_rows(query_params=QueryParams(None)):
     return get_rows_for_analyzed_data(query_params, '(crs.tj_inclusion_id > 0)')
 
 
