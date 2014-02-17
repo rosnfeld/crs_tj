@@ -63,6 +63,9 @@ def query_results(request):
 
 
 def commit_analysis(request):
+    if not request.user.is_authenticated():
+        return HttpResponse('Unauthorized', status=401)
+
     payload = request.read()
     json_payload = json.loads(payload)
 
