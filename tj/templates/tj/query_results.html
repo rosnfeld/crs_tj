@@ -50,7 +50,11 @@
 
             contentType: "application/json; charset=utf-8",
 
-            success: refreshResults,
+            success: function() {
+                // before we were just be able to pass a direct handle to refreshResults,
+                // but somehow after introducing a parameter it's not happy anymore
+                refreshResults();
+            },
 
             error: function (xhr, status) {
                 alert("Failed to commit analyzed rows");
