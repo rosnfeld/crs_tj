@@ -1,3 +1,4 @@
+{% if user.is_authenticated %}
 <script>
     var inclusionActions = {};
     var categoryActions = {};
@@ -57,6 +58,7 @@
         });
     }
 </script>
+{% endif %}
 <div id="results_message" class="panel panel-default">
     <div class="panel-body">
         {%  if page.num_items > 0 %}
@@ -76,6 +78,7 @@
         </button>
     </div>
 </div>
+{% if user.is_authenticated %}
 <div id="results_controls" class="panel panel-default">
     <div class="panel-body">
         <div class="row">
@@ -126,10 +129,13 @@
         </div>
     </div>
 </div>
+{% endif %}
 <table id="results_table" class="table table-condensed">
     <thead>
         <tr>
+            {% if user.is_authenticated %}
             <th class="select_col">Select</th>
+            {% endif %}
             <th class="include_col">Include</th>
             <th class="category_col">Category</th>
             <th class="year_col">Year</th>
@@ -148,7 +154,9 @@
     <tbody>
         {% for i, row in page.data_frame.iterrows %}
             <tr id="r_{{ i }}">
+                {% if user.is_authenticated %}
                 <td  class="select_col"><input type='checkbox' id='c_{{ i }}' class="result_checkbox"/></td>
+                {% endif %}
                 <td class="include_col" id="incl_{{ i }}">{{ row.tj_inclusion_name }}</td>
                 <td class="category_col" id="cat_{{ i }}">{{ row.tj_category_name }}</td>
                 <td class="year_col">{{ row.year }}</td>
