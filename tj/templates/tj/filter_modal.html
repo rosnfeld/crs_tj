@@ -1,15 +1,3 @@
-<script>
-    // TODO centralize this and other JavaScript in static file?
-    function style_filter_dropdown(filter_type) {
-        var filter_jquery_object = $('#fb_' + filter_type);
-        if (getSelectedCodesForFilter(filter_type).length > 0) {
-            filter_jquery_object.addClass('filter_active');
-        } else {
-            filter_jquery_object.removeClass('filter_active');
-        }
-    }
-</script>
-{% for filter_type, filter_rows in code_filter_map.items %}
 <div class="modal fade" id="modal_filter_{{ filter_type }}" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -49,4 +37,3 @@
         </div>
     </div>
 </div>
-{% endfor %}

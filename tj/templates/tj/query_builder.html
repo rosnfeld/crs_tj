@@ -32,12 +32,19 @@
             code_filters['{{ filter_type }}'] = getSelectedCodesForFilter('{{ filter_type }}');
             {% endfor %}
 
+            var custom_filters = {};
+            {% for filter_type in custom_filter_types %}
+            custom_filters['{{ filter_type }}'] = getSelectedCodesForFilter('{{ filter_type }}');
+            {% endfor %}
+
             $.ajax({
                 url: "{{ results_url }}",
 
                 type: "POST",
 
-                data: JSON.stringify({search_terms: search_terms, code_filters: code_filters, page_number: page_number}),
+                data: JSON.stringify({search_terms: search_terms,
+                    code_filters: code_filters, custom_filters: custom_filters,
+                    page_number: page_number}),
 
                 contentType: "application/json; charset=utf-8",
 
@@ -53,6 +60,15 @@
 
         function editFilter(filter_type) {
             $("#modal_filter_" + filter_type).modal();
+        }
+
+        function style_filter_dropdown(filter_type) {
+            var filter_jquery_object = $('#fb_' + filter_type);
+            if (getSelectedCodesForFilter(filter_type).length > 0) {
+                filter_jquery_object.addClass('filter_active');
+            } else {
+                filter_jquery_object.removeClass('filter_active');
+            }
         }
 
         $(document).ready(function() {
@@ -80,7 +96,15 @@
             </div>
             <div class="row top-buffer">
                 <label class="col-md-1">Filters</label>
-                <div class="col-md-8">
+                <div class="col-md-9">
+                    {% for filter_type in custom_filter_types %}
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
+                                    onclick="editFilter('{{ filter_type }}')">
+                                {{ filter_type|title }} <span class="caret"></span>
+                            </button>
+                        </div>
+                    {% endfor %}
                     {% for filter_type in code_filter_types %}
                         <div class="btn-group">
                             <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
@@ -99,7 +123,12 @@
     </div>
     <div id="results_holder"></div>
     <div id="modal_holder">
-        {% include "tj/filter_modals.html" %}
+        {% for filter_type, filter_rows in custom_filter_map.items %}
+            {% include "tj/filter_modal.html" %}
+        {% endfor %}
+        {% for filter_type, filter_rows in code_filter_map.items %}
+            {% include "tj/filter_modal.html" %}
+        {% endfor %}
     </div>
 </div>
 </body>

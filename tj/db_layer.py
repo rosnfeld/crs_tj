@@ -89,19 +89,17 @@ CSV_COLUMNS = [
     ]
 
 
-class CodeFilterParams(object):
-    def __init__(self, filter_type, code):
-        self.filter_type = filter_type
-        self.code = code
-
-
 class QueryParams(object):
     def __init__(self, search_terms):
         self.search_terms = search_terms
-        self.code_filters = []
+        self.codefilter_type_to_codes = collections.defaultdict(list)
+        self.customfilter_type_to_codes = collections.defaultdict(list)
 
     def add_code_filter(self, filter_type, code):
-        self.code_filters.append(CodeFilterParams(filter_type, code))
+        self.codefilter_type_to_codes[filter_type].append(code)
+
+    def add_custom_column_filter(self, filter_type, code):
+        self.customfilter_type_to_codes[filter_type].append(code)
 
 
 def get_db_connection():
@@ -137,16 +135,19 @@ def generate_where_clause_and_params(query_params):
         where_clause += ' AND crs.searchable_text @@ to_tsquery(%s) '
         params += [convert_to_tsquery(query_params.search_terms)]
 
-    # group codes by filter type
-    codes_per_filter_type = collections.defaultdict(list)
-    for code_filter in query_params.code_filters:
-        codes_per_filter_type[code_filter.filter_type].append(code_filter.code)
-
     # do an OR across all filters of a given filtertype, and then an AND across filter types
     # TODO fancier logic to properly handle agencies
     # TODO fancier logic to handle null channels
-    for filter_type, codes in codes_per_filter_type.iteritems():
+    for filter_type, codes in query_params.codefilter_type_to_codes.iteritems():
         column = 'crs.' + filter_type + 'code'
+
+        code_strings = [str(code) for code in codes]
+
+        # could use sql params here but ints are pretty safe to just write in explicitly
+        where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
+
+    for filter_type, codes in query_params.customfilter_type_to_codes.iteritems():
+        column = 'crs.tj_' + filter_type + '_id'
 
         code_strings = [str(code) for code in codes]
 
@@ -229,6 +230,10 @@ def convert_to_csv_string_for_export(dataframe):
 
 def get_all_rows_from_table(tablename):
     return pd.read_sql('SELECT * FROM ' + tablename + ';', get_db_connection())
+
+
+def standardize_columns_for_filter(rows, code_column, name_column):
+    return rows.rename(columns={code_column: 'code', name_column: 'name'})
     
 
 def get_all_name_code_pairs(filtertype):
@@ -241,21 +246,31 @@ def get_all_name_code_pairs(filtertype):
     name_column = filtertype + 'name'
     rows = rows.sort(name_column)
 
-    return rows.rename(columns={code_column: 'code', name_column: 'name'})
+    return standardize_columns_for_filter(rows, code_column, name_column)
 
 
-def get_all_inclusion_rows():
+def get_all_inclusion_rows(as_filter=False):
     """
     Returns a dataframe of the tj_inclusion table.
     """
-    return get_all_rows_from_table('tj_inclusion')
+    rows = get_all_rows_from_table('tj_inclusion')
+    
+    if as_filter:
+        return standardize_columns_for_filter(rows, code_column='tj_inclusion_id', name_column='tj_inclusion_name')
+    else:
+        return rows
 
 
-def get_all_category_rows():
+def get_all_category_rows(as_filter=False):
     """
     Returns a dataframe of the tj_category table.
     """
-    return get_all_rows_from_table('tj_category')
+    rows = get_all_rows_from_table('tj_category')
+
+    if as_filter:
+        return standardize_columns_for_filter(rows, code_column='tj_category_id', name_column='tj_category_name')
+    else:
+        return rows
 
 
 def update_inclusions(inclusion_actions):
