@@ -72,6 +72,10 @@
         }
 
         $(document).ready(function() {
+            // add a wait cursor during AJAX calls
+            $(document).ajaxStart(function () { $('html').addClass('wait'); });
+            $(document).ajaxStop(function () { $('html').removeClass('wait'); });
+
             {% if submit_on_load %}
             refreshResults();
             {% endif %}

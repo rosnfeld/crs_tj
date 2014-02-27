@@ -8,6 +8,10 @@ td {
     overflow: hidden;
 }
 
+.wait {
+    cursor: wait !important;
+}
+
 .filter_active {
     background-color: #f0f0f0;
 }
