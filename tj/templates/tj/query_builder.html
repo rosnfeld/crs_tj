@@ -37,13 +37,15 @@
             custom_filters['{{ filter_type }}'] = getSelectedCodesForFilter('{{ filter_type }}');
             {% endfor %}
 
+            var years = getSelectedCodesForFilter('year');
+
             $.ajax({
                 url: "{{ results_url }}",
 
                 type: "POST",
 
                 data: JSON.stringify({search_terms: search_terms,
-                    code_filters: code_filters, custom_filters: custom_filters,
+                    code_filters: code_filters, custom_filters: custom_filters, years: years,
                     page_number: page_number}),
 
                 contentType: "application/json; charset=utf-8",
@@ -100,23 +102,25 @@
             </div>
             <div class="row top-buffer">
                 <label class="col-md-1">Filters</label>
-                <div class="col-md-9">
+                <div class="col-md-8">
+                    <div class="btn-group btn-group-sm">
                     {% for filter_type in custom_filter_types %}
-                        <div class="btn-group">
                             <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
                                     onclick="editFilter('{{ filter_type }}')">
                                 {{ filter_type|title }} <span class="caret"></span>
                             </button>
-                        </div>
                     {% endfor %}
+                        <button type="button" class="btn btn-default dropdown-toggle" id="fb_year"
+                                onclick="editFilter('year')">
+                            Year <span class="caret"></span>
+                        </button>
                     {% for filter_type in code_filter_types %}
-                        <div class="btn-group">
                             <button type="button" class="btn btn-default dropdown-toggle" id="fb_{{ filter_type }}"
                                     onclick="editFilter('{{ filter_type }}')">
                                 {{ filter_type|title }} <span class="caret"></span>
                             </button>
-                        </div>
                     {% endfor %}
+                    </div>
                 </div>
                 <button class="btn btn-default" type="button" onclick="refreshResults()">
                     <span class="glyphicon glyphicon-search"></span>
@@ -127,6 +131,7 @@
     </div>
     <div id="results_holder"></div>
     <div id="modal_holder">
+        {% include "tj/filter_modal.html" with filter_type='year' filter_rows=year_filter_rows %}
         {% for filter_type, filter_rows in custom_filter_map.items %}
             {% include "tj/filter_modal.html" %}
         {% endfor %}

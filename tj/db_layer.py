@@ -94,12 +94,16 @@ class QueryParams(object):
         self.search_terms = search_terms
         self.codefilter_type_to_codes = collections.defaultdict(list)
         self.customfilter_type_to_codes = collections.defaultdict(list)
+        self.yearfilters = []
 
     def add_code_filter(self, filter_type, code):
         self.codefilter_type_to_codes[filter_type].append(code)
 
     def add_custom_column_filter(self, filter_type, code):
         self.customfilter_type_to_codes[filter_type].append(code)
+
+    def add_year_filter(self, year):
+        self.yearfilters.append(year)
 
 
 def get_db_connection():
@@ -143,7 +147,8 @@ def generate_where_clause_and_params(query_params):
 
         code_strings = [str(code) for code in codes]
 
-        # could use sql params here but ints are pretty safe to just write in explicitly
+        # could use sql params here but if we make the assumption that these are ints we should be okay
+        # (for a commercial website we'd want to have sanitized these)
         where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
 
     for filter_type, codes in query_params.customfilter_type_to_codes.iteritems():
@@ -153,6 +158,9 @@ def generate_where_clause_and_params(query_params):
 
         # could use sql params here but ints are pretty safe to just write in explicitly
         where_clause += ' AND ' + column + ' IN (' + ','.join(code_strings) + ') '
+
+    if query_params.yearfilters:
+        where_clause += ' AND crs.year IN (' + ','.join(query_params.yearfilters) + ') '
 
     return where_clause, params
 
@@ -271,6 +279,14 @@ def get_all_category_rows(as_filter=False):
         return standardize_columns_for_filter(rows, code_column='tj_category_id', name_column='tj_category_name')
     else:
         return rows
+
+
+def get_years_as_filter_rows():
+    """
+    This could be a db query, but we'll just fake it for now
+    """
+    years = range(2000, 2014)
+    return pd.DataFrame({'code': years, 'name': years})
 
 
 def update_inclusions(inclusion_actions):

@@ -25,6 +25,7 @@ def construct_query_builder_context(title, results_view, parents):
     return {'title': title,
             'results_url': reverse(results_view),
             'parents': [(name, reverse(view)) for name, view in parents],
+            'year_filter_rows': db_layer.get_years_as_filter_rows(),
             # pass the types explicitly as list, as order is important
             'code_filter_types': CODE_FILTER_TYPES, 'code_filter_map': code_filter_map}
 
@@ -53,6 +54,9 @@ def query_results(request):
     for filter_type, codes in json_payload['code_filters'].iteritems():
         for code in codes:
             query.add_code_filter(filter_type, code)
+
+    for year in json_payload['years']:
+        query.add_year_filter(year)
 
     possible_row_count = db_layer.get_count_of_matching_rows_for_query(query)
     result_rows = db_layer.get_matching_rows_for_query(query)
@@ -145,6 +149,9 @@ def review_results(request, results_function):
     for filter_type, codes in json_payload['custom_filters'].iteritems():
         for code in codes:
             query.add_custom_column_filter(filter_type, code)
+
+    for year in json_payload['years']:
+        query.add_year_filter(year)
 
     results = results_function(query)
 
