@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Review Analyzed Rows</title>
-    {% include 'tj/header_includes.html' %}
-</head>
-<body>
+{% extends "tj/base_template.html" %}
+{% block title %}Review Analyzed Rows{% endblock %}
+{% block body_content %}
 <div class="container">
     <div class="page-header">
         <h3>Review Analyzed Rows</h3>
@@ -50,5 +46,4 @@
         </ol>
     </div>
 </div>
-</body>
-</html>
+{% endblock %}

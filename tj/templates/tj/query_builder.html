@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ title }}</title>
-    {% include 'tj/header_includes.html' %}
+{% extends "tj/base_template.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block header_content %}
     <script>
         initializeAJAX('{{ csrf_token }}');
 
@@ -83,8 +81,8 @@
             {% endif %}
         });
     </script>
-</head>
-<body>
+{% endblock %}
+{% block body_content %}
 <div class="container">
     <ol class="breadcrumb">
         {% for parent_name, parent_url in parents %}
@@ -140,5 +138,4 @@
         {% endfor %}
     </div>
 </div>
-</body>
-</html>
+{% endblock %}

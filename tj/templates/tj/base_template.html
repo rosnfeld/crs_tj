@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Title goes here{% endblock %}</title>
+    {% include 'tj/header_includes.html' %}
+    {% block header_content %}
+        <!-- Additional includes, scripting, etc goes here -->
+    {% endblock %}
+</head>
+<body>
+{% block body_content %}
+    Content goes here
+{% endblock %}
+</body>
+</html>
