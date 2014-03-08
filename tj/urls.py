@@ -5,6 +5,8 @@ from tj import views
 urlpatterns = patterns('',
     url(r'^$', views.index, name='home'),
 
+    url(r'^about$', views.about, name='about'),
+
     url(r'^login$', 'django.contrib.auth.views.login', {'template_name': 'tj/login.html'}, name='login'),
     url(r'^logout$', 'django.contrib.auth.views.logout_then_login', {'login_url': 'login'}, name='logout'),
 

@@ -12,6 +12,8 @@ import datetime
 def index(request):
     return render(request, 'tj/index.html')
 
+def about(request):
+    return render(request, 'tj/about.html')
 
 # consider using a parameters object rather than a map to better manage this complexity?
 def construct_query_builder_context(title, results_view, parents):

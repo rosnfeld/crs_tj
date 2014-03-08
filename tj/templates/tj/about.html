@@ -1,0 +1,62 @@
+{% extends "tj/base_template.html" %}
+{% block title %}OECD CRS Data on Transitional Justice{% endblock %}
+{% block body_content %}
+<div class="container">
+    <div class="page-header">
+        <h3>About this Site</h3>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-10">
+            <h4>Purpose</h4>
+            <p>
+                This website provides a query interface to the OECD's Creditor Reporting System (CRS) data,
+                much like OECD's <a href="http://stats.oecd.org/qwids/">QWIDS</a> site.
+            </p>
+            <p>
+                The intention is to build a repository of international aid data related to
+                <a href="https://en.wikipedia.org/wiki/Transitional_justice">Transitional Justice</a>
+                (TJ) as recorded in the CRS database.
+
+                TJ data is not clearly designated as such in CRS, so manual classification has been performed
+                on the results of ad-hoc text queries in various languages.
+            </p>
+            <p>
+                You can review the results of this classification <a href="{% url 'review_analysis' %}">here</a>.
+            </p>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-md-10">
+            <h4>Methodology</h4>
+            <p>
+                Raw CRS data is downloaded from the OECD and filtered on various criteria:
+                <ul>
+                    <li>
+                        "Purpose Codes" that might potentially refer to TJ work
+                    </li>
+                    <li>
+                        Aid data from the year 2000 onwards
+                    </li>
+                    <li>
+                        Columns relevant to the project
+                    </li>
+                </ul>
+                This reduced dataset is loaded into a database along with custom classification fields.
+                This website is then used to query and classify the unanalyzed data and review the
+                analyzed results.
+            </p>
+            <p>
+                The data processing and website code is open source, and available on
+                <a href="https://github.com/rosnfeld/crs_tj/">github</a>.
+            </p>
+        </div>
+    </div>
+    <hr/>
+    <div class="row">
+        <ol class="breadcrumb">
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li class="active">About</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
