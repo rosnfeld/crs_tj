@@ -9,16 +9,17 @@
         <div class="col-md-10">
             <h4>Purpose</h4>
             <p>
-                This website provides a query interface to the OECD's Creditor Reporting System (CRS) data,
+                This website provides an interface to search the OECD's Creditor Reporting System (CRS) data,
                 much like OECD's <a href="http://stats.oecd.org/qwids/">QWIDS</a> site.
             </p>
             <p>
                 The intention is to build a repository of international aid data related to
                 <a href="https://en.wikipedia.org/wiki/Transitional_justice">Transitional Justice</a>
-                (TJ) as recorded in the CRS database.
+                (TJ) as recorded in the CRS database, which includes all bilateral assistance from OECD member states
+                and some multilateral assistance.
 
                 TJ data is not clearly designated as such in CRS, so manual classification has been performed
-                on the results of ad-hoc text queries in various languages.
+                on the results of ad-hoc text queries in various languages (e.g. "transitional justice", "truth", "ICTY", etc).
             </p>
             <p>
                 You can review the results of this classification <a href="{% url 'review_analysis' %}">here</a>.
