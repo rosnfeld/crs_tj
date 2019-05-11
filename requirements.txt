@@ -1,9 +1,9 @@
-Django==1.6.1
+Django==1.11.19
 argparse==1.2.1
 dj-database-url==0.2.2
 dj-static==0.0.5
 django-toolbelt==0.0.1
-gunicorn==18.0
+gunicorn==19.5.0
 numpy==1.8.0
 # sticking with pandas 0.12 for performance reasons
 pandas==0.12.0
